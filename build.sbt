@@ -19,6 +19,9 @@ resolvers += Resolver.sonatypeRepo("snapshots") // for tensorflow
 
 libraryDependencies ++=
   Seq(
+    "com.microsoft.azure" % "azure-eventhubs-eph" % "0.15.1",
+    "com.microsoft.azure" % "azure-eventhubs" % "0.15.1",
+
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe" % "config" % "1.2.1",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
@@ -32,6 +35,8 @@ libraryDependencies ++=
     "org.scalanlp" %% "breeze-viz" % "0.13.2",
 
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-remote" % akkaVersion,
+    "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
 
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"
