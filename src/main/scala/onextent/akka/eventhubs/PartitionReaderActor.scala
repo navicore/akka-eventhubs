@@ -80,12 +80,12 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
   override def receive: Receive = {
 
     case ack: Ack =>
-      logger.debug(s"partition $partitionId got ack for ${ack.offset}")
+      logger.debug(s"partition $partitionId ack for ${ack.offset}")
       state = ack.offset
       // kick off a wheel on every ack
       read() match {
         case Some(event) =>
-          logger.debug(s"partition $partitionId got new msg")
+          logger.debug(s"partition $partitionId new msg")
           connector ! event
         case _ => throw new IOException("no new msg")
       }

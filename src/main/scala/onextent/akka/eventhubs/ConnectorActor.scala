@@ -35,7 +35,7 @@ class ConnectorActor() extends Actor with LazyLogging {
 
     case event: Event =>
       // add to queue
-      logger.debug(s"got event from ${event.partitionId}")
+      logger.debug(s"event from ${event.partitionId}")
       val (queue, requests) = state
       state = (queue :+ event, requests)
       while (state._1.nonEmpty && state._2.nonEmpty) {

@@ -28,12 +28,12 @@ class Eventhubs(implicit system: ActorSystem)
         out,
         new OutHandler {
           override def onPull(): Unit = {
-            logger.debug("got pull poll")
+            logger.debug("pull poll")
             val f = connector ask Pull()
             Await.result(f, timeout.duration) match {
               case Event(from, partitionId, eventData) =>
                 val data = new String(eventData.getBytes)
-                logger.debug(s"got ${eventData.getSystemProperties.getPartitionKey} from $partitionId")
+                logger.debug(s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
                 push(out, data)
                 from ! Ack(partitionId, eventData.getSystemProperties.getOffset) //todo: create CompletionToken and delegate to Sink/Flow
               case x => logger.error(s"I don't know how to handle success $x")
