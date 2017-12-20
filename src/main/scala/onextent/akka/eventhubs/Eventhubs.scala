@@ -6,7 +6,7 @@ import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
-import onextent.akka.eventhubs.ConnectorActor.{Ack, Event, Pull}
+import onextent.akka.eventhubs.ConnectorActor._
 
 import scala.concurrent.Await
 
@@ -31,29 +31,13 @@ class Eventhubs(implicit system: ActorSystem)
             logger.debug("got pull poll")
             val f = connector ask Pull()
             Await.result(f, timeout.duration) match {
-              case Event(from, partitionId, key, data) =>
-                logger.debug(s"got $key from $partitionId")
+              case Event(from, partitionId, eventData) =>
+                val data = new String(eventData.getBytes)
+                logger.debug(s"got ${eventData.getSystemProperties.getPartitionKey} from $partitionId")
                 push(out, data)
-                from ! Ack()
+                from ! Ack(partitionId, eventData.getSystemProperties.getOffset) //todo: create CompletionToken and delegate to Sink/Flow
               case x => logger.error(s"I don't know how to handle success $x")
             }
-            /*
-            f.onComplete((r: Any) => {
-              r match {
-                case Success(event) =>
-                  event match {
-                    case Event(from, partitionId, key, data) =>
-                      logger.debug(s"got $key from $partitionId")
-                      push(out, data)
-                      from ! Ack
-                    case x => logger.error(s"I don't know how to handle success $x")
-                  }
-                case x =>
-                  logger.error(s"I don't know how to handle $x")
-              }
-
-            })
-             */
           }
         }
       )

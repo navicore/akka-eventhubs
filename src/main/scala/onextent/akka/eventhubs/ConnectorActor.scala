@@ -3,6 +3,7 @@ package onextent.akka.eventhubs
 import scala.collection.immutable.Queue
 import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
+import com.microsoft.azure.eventhubs.EventData
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.ConnectorActor._
 import onextent.akka.eventhubs.Conf._
@@ -12,12 +13,9 @@ object ConnectorActor {
   val name: String = "ConnectorActor"
   def props()(implicit timeout: Timeout) =
     Props(new ConnectorActor())
-  final case class Event(from: ActorRef,
-                         partitionId: Int,
-                         key: String,
-                         data: String)
+  final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
-  final case class Ack()
+  final case class Ack(partitionId: Int, offset: String)
 }
 
 class ConnectorActor() extends Actor with LazyLogging {

@@ -49,23 +49,24 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
   // wheel to call from init
   def read(): Option[Event] = {
 
-    var result: Option[String] = None //ejs todo:
+    var result: Option[EventData] = None
 
     while (result.isEmpty) {
 
       val receivedEvents = receiver.receiveSync(ehRecieverBatchSize)
       result = Some(receivedEvents) match {
-        case Some(recEv) if recEv.iterator().hasNext =>
+        case Some(recEv)
+            if Option(recEv.iterator()).isDefined && recEv.iterator().hasNext =>
           val e: EventData = recEv.iterator().next()
           logger.debug(s"read partition $partitionId got EventData")
-          Some(new String(e.getBytes))
+          Some(e)
         case _ => None
       }
     }
     result match {
-      case Some(r) =>
+      case Some(eventData) =>
         logger.debug(s"read partition $partitionId got result")
-        Some(Event(self, partitionId, "", new String(r.getBytes)))
+        Some(Event(self, partitionId, eventData))
       case _ =>
         None
     }
