@@ -48,20 +48,11 @@ object Conf extends Conf with LazyLogging {
 
 trait Conf {
 
-  val origConf: Config = ConfigFactory.load()
-  val overrides: Config = ConfigFactory.parseString(s"""
-      # override seed node 0
-      akka.cluster.seed-nodes.0="${origConf.getString("main.akkaSeed0")}"
-      akka.cluster.seed-nodes.1="${origConf.getString("main.akkaSeed1")}"
-      """)
+  val overrides: Config = ConfigFactory.load()
 
   val conf: Config = overrides.withFallback(ConfigFactory.load())
 
   val appName: String = conf.getString("main.appName")
-  val isSeed: Boolean = conf.getString("main.role").contains("seed")
-  val isStreamer: Boolean = conf.getString("main.role").contains("streamer")
-  val akkaSeed0: String = conf.getString("main.akkaSeed0")
-  val akkaSeed1: String = conf.getString("main.akkaSeed1")
 
   val ehRecieverBatchSize: Int = conf.getInt("eventhubs-1.connection.receiverBatchSize")
   val ehConsumerGroup: String = conf.getString("eventhubs-1.connection.consumerGroup")
