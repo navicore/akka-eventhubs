@@ -5,7 +5,7 @@ import java.time.Duration
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
-import com.microsoft.azure.eventhubs.{EventData, PartitionReceiver}
+import com.microsoft.azure.eventhubs._
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.ConnectorActor._
@@ -27,7 +27,7 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
 
   logger.info(s"creating PartitionReaderActor $partitionId")
 
-  import com.microsoft.azure.eventhubs.{ConnectionStringBuilder, EventHubClient}
+  var state: String = PartitionReceiver.END_OF_STREAM //todo actor persistence
 
   val connStr = new ConnectionStringBuilder(ehNamespace,
                                             ehName,
@@ -40,7 +40,7 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
   val receiver: PartitionReceiver = ehClient.createReceiverSync(
     ehConsumerGroup,
     partitionId.toString,
-    PartitionReceiver.END_OF_STREAM,
+    state,
     false)
 
   receiver.setReceiveTimeout(Duration.ofSeconds(20))
@@ -57,14 +57,12 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
         case Some(recEv)
             if Option(recEv.iterator()).isDefined && recEv.iterator().hasNext =>
           val e: EventData = recEv.iterator().next()
-          logger.debug(s"read partition $partitionId got EventData")
           Some(e)
         case _ => None
       }
     }
     result match {
       case Some(eventData) =>
-        logger.debug(s"read partition $partitionId got result")
         Some(Event(self, partitionId, eventData))
       case _ =>
         None
@@ -81,8 +79,9 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
 
   override def receive: Receive = {
 
-    case _: Ack =>
-      logger.debug(s"partition $partitionId got ack")
+    case ack: Ack =>
+      logger.debug(s"partition $partitionId got ack for ${ack.offset}")
+      state = ack.offset
       // kick off a wheel on every ack
       read() match {
         case Some(event) =>
