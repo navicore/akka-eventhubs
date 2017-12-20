@@ -1,5 +1,5 @@
 name := "AkkaEventhubs"
-organization := "navicore"
+organization := "tech.navicore"
 
 fork := true
 javaOptions in test ++= Seq(
@@ -10,33 +10,17 @@ javaOptions in test ++= Seq(
 
 parallelExecution in test := false
 
-version := "0.1.0"
+version := "0.1.1"
 
-//scalaVersion := "2.12.4"
 crossScalaVersions := Seq("2.11.12", "2.12.4")
 
 ensimeScalaVersion in ThisBuild := "2.12.4"
 val akkaVersion = "2.5.6"
 
+sonatypeProfileName := "tech.navicore"
+useGpg := true
 publishArtifact in packageDoc := false
 publishArtifact in packageSrc := false
-//publishTo := Some(Resolver.file("file", new File("/Users/navicore/tmp/nexus")))
-//publishTo := Some("Sonatype Snapshots Nexus" at "https://oss.sonatype.org/content/repositories/snapshots")
-
-// POM settings for Sonatype
-homepage := Some(url("https://github.com/navicore/akka-eventhubs"))
-
-scmInfo := Some(ScmInfo(url("https://github.com/navicore/akka-eventhubs"),
-                            "git@github.com:navicore/akka-eventhubs.git"))
-
-developers := List(Developer("navicore",
-                             "Ed Sweeney",
-                             "ed@onextent.com",
-                             url("https://github.com/navicore")))
-licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
-publishMavenStyle := true
-
-// Add sonatype repository settings
 publishTo := Some(
   if (isSnapshot.value)
     Opts.resolver.sonatypeSnapshots
