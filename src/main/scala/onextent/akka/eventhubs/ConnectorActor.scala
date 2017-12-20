@@ -16,6 +16,11 @@ object ConnectorActor {
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
   final case class Ack(partitionId: Int, offset: String)
+  final case class AckableOffset(ackme: Ack, from: ActorRef) {
+    def ack(): Unit = {
+      from ! ackme
+    }
+  }
 }
 
 class ConnectorActor() extends Actor with LazyLogging {
@@ -42,7 +47,8 @@ class ConnectorActor() extends Actor with LazyLogging {
         val (queue, requests) = state
         val (next, newQueue) = queue.dequeue
         val (requestor, newRequests) = requests.dequeue
-        logger.debug(s"sending to long-waiting requestor from ${next.partitionId}. r q sz: ${requests.size}")
+        logger.debug(
+          s"sending to long-waiting requestor from ${next.partitionId}. r q sz: ${requests.size}")
         requestor ! next
         state = (newQueue, newRequests)
       }
@@ -55,7 +61,8 @@ class ConnectorActor() extends Actor with LazyLogging {
       } else {
         val (next, newQueue) = queue.dequeue
         state = (newQueue, requests)
-        logger.debug(s"sending event to short-waiting requestor from ${next.partitionId} q sz: ${queue.size}")
+        logger.debug(
+          s"sending event to short-waiting requestor from ${next.partitionId} q sz: ${queue.size}")
         sender() ! next
       }
 

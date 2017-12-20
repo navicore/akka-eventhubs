@@ -11,12 +11,12 @@ import onextent.akka.eventhubs.ConnectorActor._
 import scala.concurrent.Await
 
 class Eventhubs(implicit system: ActorSystem)
-    extends GraphStage[SourceShape[String]]
+    extends GraphStage[SourceShape[(String, AckableOffset)]]
     with LazyLogging {
 
-  val out: Outlet[String] = Outlet("EventhubsSource")
+  val out: Outlet[(String, AckableOffset)] = Outlet("EventhubsSource")
 
-  override val shape: SourceShape[String] = SourceShape(out)
+  override val shape: SourceShape[(String, AckableOffset)] = SourceShape(out)
 
   val connector: ActorRef =
     system.actorOf(ConnectorActor.props(), ConnectorActor.name)
@@ -28,15 +28,22 @@ class Eventhubs(implicit system: ActorSystem)
         out,
         new OutHandler {
           override def onPull(): Unit = {
-            logger.debug("pull poll")
-            val f = connector ask Pull()
-            Await.result(f, timeout.duration) match {
-              case Event(from, partitionId, eventData) =>
-                val data = new String(eventData.getBytes)
-                logger.debug(s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
-                push(out, data)
-                from ! Ack(partitionId, eventData.getSystemProperties.getOffset) //todo: create CompletionToken and delegate to Sink/Flow
-              case x => logger.error(s"I don't know how to handle success $x")
+            try {
+              val f = connector ask Pull()
+              Await.result(f, timeout.duration) match {
+                case Event(from, partitionId, eventData) =>
+                  val data = new String(eventData.getBytes)
+                  logger.debug(
+                    s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
+                  val ack =
+                    Ack(partitionId, eventData.getSystemProperties.getOffset)
+                  push(out, (data, AckableOffset(ack, from)))
+                case x => logger.error(s"I don't know how to handle success $x")
+              }
+            } catch {
+              case _: java.util.concurrent.TimeoutException =>
+                logger.error("pull request timeout")
+                // todo: broadcast an ack
             }
           }
         }

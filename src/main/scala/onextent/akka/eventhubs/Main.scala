@@ -9,6 +9,10 @@ object Main extends App {
 
   val mySource = Source.fromGraph(sourceGraph)
 
-  mySource.runForeach(m => println(s"ejs yay: $m"))
+  mySource.runForeach(m => {
+
+    println(s"ejs yay: ${m._1.substring(0, 140)}")
+    m._2.ack()
+  })
 
 }
