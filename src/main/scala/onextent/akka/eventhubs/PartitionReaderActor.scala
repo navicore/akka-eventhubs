@@ -18,7 +18,6 @@ object PartitionReaderActor {
 
 }
 
-// todo: add offset to retruning acks
 // todo: make persistent actor whose state is based on acks offset data (store the highest/latest ack)
 // todo: make acks flow like kafka CommittableOffset mechanism from Flow/Sink ops
 // todo: batch reads
