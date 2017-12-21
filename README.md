@@ -65,3 +65,11 @@ sbt +sonatypeRelease
  or
 sbt sonatypeReleaseAll
 ```
+
+TODO:
+
+* support multiple instances (explicit config load)
+* persistent actor (save offsets)
+* support multiple partition readers reading the same paretition in same cluster
+
+
