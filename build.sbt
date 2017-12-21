@@ -10,17 +10,52 @@ javaOptions in test ++= Seq(
 
 parallelExecution in test := false
 
-version := "0.1.1"
+version := "0.1.5"
 
-crossScalaVersions := Seq("2.11.12", "2.12.4")
+val scala212 = "2.12.4"
+val scala211 = "2.11.12"
 
-ensimeScalaVersion in ThisBuild := "2.12.4"
+crossScalaVersions := Seq(scala212, scala211)
+ensimeScalaVersion in ThisBuild := scala212
 val akkaVersion = "2.5.6"
+
+publishMavenStyle := true
+
+homepage := Some(url("https://github.com/navicore/akka-eventhubs"))
+
+scmInfo := Some(ScmInfo(url("https://github.com/navicore/akka-eventhubs"),
+                            "git@github.com:navicore/akka-eventhubs.git"))
+
+developers := List(Developer("navicore",
+                             "Ed Sweeney",
+                             "ed@onextent.com",
+                             url("https://github.com/navicore")))
+licenses += ("MIT", url("https://opensource.org/licenses/MIT"))
+
+import ReleaseTransformations._
+
+releaseCrossBuild := true
+
+releasePublishArtifactsAction := PgpKeys.publishSigned.value // Use publishSigned in publishArtifacts step
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  releaseStepCommand("sonatypeReleaseAll"),
+  pushChanges
+)
+
 
 sonatypeProfileName := "tech.navicore"
 useGpg := true
-publishArtifact in packageDoc := false
-publishArtifact in packageSrc := false
 publishTo := Some(
   if (isSnapshot.value)
     Opts.resolver.sonatypeSnapshots

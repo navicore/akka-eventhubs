@@ -1,10 +1,26 @@
 Akka Eventhubs
 ---
 
-Akka Streams Azure Eventhubs Source and Sink
+Akka Streams Azure Eventhubs Source ~~and Sink~~
 
-# UNDER CONSTRUCTION
+# STATUS
 
-# UNDER CONSTRUCTION
+ * Alpha 
+ * needs error recovery
 
-# UNDER CONSTRUCTION
+## OPS
+
+### publish local
+
+```console
+sbt +publishLocalSigned
+```
+
+### publish to nexus staging
+
+```console
+sbt +publishSigned
+sbt +sonatypeRelease
+ or
+sbt sonatypeReleaseAll
+```
