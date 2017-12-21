@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/navicore/akka-eventhubs.svg?branch=master)](https://travis-ci.org/navicore/akka-eventhubs)
+
 Akka Eventhubs
 ---
 
