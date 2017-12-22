@@ -8,8 +8,8 @@ Akka Streams Azure Eventhubs Source ~~and Sink~~
 
 # STATUS
 
- * Alpha 
- * needs error recovery
+ * Alpha - under construction
+ * does not recover from timeouts yet
 
 # USAGE
 
@@ -64,8 +64,6 @@ sbt +publishLocalSigned
 
 ```console
 sbt +publishSigned
-sbt +sonatypeRelease
- or
 sbt sonatypeReleaseAll
 ```
 
@@ -73,6 +71,6 @@ TODO:
 
 * support multiple instances (explicit config load)
 * persistent actor (save offsets)
-* support multiple partition readers reading the same paretition in same cluster
+* support multiple partition readers reading the same partition in same cluster
 
 
