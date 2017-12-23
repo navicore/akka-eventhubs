@@ -60,51 +60,9 @@ object Main extends App {
 }
 ```
 
-# WITH PERSISTENCE OF OFFSETS
+### With Persistence of Offsets
 
-```
-eventhubs-1 {
-
-  snapshotInterval = 100
-  snapshotInterval = ${?SNAP_SHOT_INTERVAL}
-
-  persist = true
-  persist = ${?EVENTHUBS_1_PERSIST}
-
-  persistFreq = 1
-  persistFreq = ${?EVENTHUBS_1_PERSIST_FREQ}
-
-  offsetPersistenceId = "my_example_eventhubsOffset"
-
-  connection {
-
-    endpoint = ${EVENTHUBS_1_ENDPOINT}
-
-    name = ${EVENTHUBS_1_NAME}
-
-    namespace = ${EVENTHUBS_1_NAMESPACE}
-
-    partitions = ${EVENTHUBS_1_PARTITION_COUNT}
-
-    accessPolicy = ${EVENTHUBS_1_ACCESS_POLICY}
-
-    accessKey = ${EVENTHUBS_1_ACCESS_KEY}
-
-    consumerGroup = "$Default"
-    consumerGroup = ${?EVENTHUBS_1_CONSUMER_GROUP}
-
-    receiverTimeout = 30s
-    receiverTimeout = ${?EVENTHUBS_1_RECEIVER_TIMEOUT}
-
-    receiverBatchSize = 1
-    receiverBatchSize = ${?EVENTHUBS_1_RECEIVER_BATCH_SIZE}
-
-  }
-
-}
-```
-
-### For Persistence of Offsets change `applicagtion.conf` and configure [Actor Persistence]
+change `applicagtion.conf` and configure [Actor Persistence]
 
 ```
 eventhubs-1 {
