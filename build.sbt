@@ -73,6 +73,7 @@ libraryDependencies ++=
 
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
 
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"
   )

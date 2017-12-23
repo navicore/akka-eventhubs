@@ -54,6 +54,9 @@ trait Conf {
 
   val appName: String = conf.getString("main.appName")
 
+  val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
+  val offsetPersistenceId: String = conf.getString("eventhubs-1.offsetPersistenceId")
+  val snapshotInterval: Int = conf.getInt("eventhubs-1.snapshotInterval")
   val ehRecieverBatchSize: Int = conf.getInt("eventhubs-1.connection.receiverBatchSize")
   val ehConsumerGroup: String = conf.getString("eventhubs-1.connection.consumerGroup")
   val ehNamespace: String = conf.getString("eventhubs-1.connection.namespace")

@@ -6,7 +6,7 @@ import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
-import onextent.akka.eventhubs.ConnectorActor._
+import onextent.akka.eventhubs.Connector._
 
 import scala.concurrent.Await
 
@@ -19,7 +19,7 @@ class Eventhubs(implicit system: ActorSystem)
   override val shape: SourceShape[(String, AckableOffset)] = SourceShape(out)
 
   val connector: ActorRef =
-    system.actorOf(ConnectorActor.props(), ConnectorActor.name)
+    system.actorOf(Connector.props(), Connector.name)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {

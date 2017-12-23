@@ -3,29 +3,15 @@ package onextent.akka.eventhubs
 import java.io.IOException
 import java.time.Duration
 
-import akka.actor.{Actor, ActorRef, Props}
-import akka.util.Timeout
+import akka.actor.{Actor, ActorRef}
 import com.microsoft.azure.eventhubs._
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
-import onextent.akka.eventhubs.ConnectorActor._
+import onextent.akka.eventhubs.Connector._
 
-object PartitionReaderActor {
-
-  def props(partitionId: Int, source: ActorRef)(implicit timeout: Timeout) =
-    Props(new PartitionReaderActor(partitionId, source))
-  val nameBase: String = s"PartitionReaderActor"
-
-}
-
-// todo: make persistent actor whose state is based on acks offset data (store the highest/latest ack)
-// todo: make acks flow like kafka CommittableOffset mechanism from Flow/Sink ops
-// todo: batch reads
-class PartitionReaderActor(partitionId: Int, connector: ActorRef)
+abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
     extends Actor
     with LazyLogging {
-
-  logger.info(s"creating PartitionReaderActor $partitionId")
 
   var state: String = PartitionReceiver.END_OF_STREAM //todo actor persistence
 
@@ -65,6 +51,7 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
       case Some(eventData) =>
         Some(Event(self, partitionId, eventData))
       case _ =>
+        logger.debug(s"no eventData")
         None
     }
 
@@ -75,22 +62,6 @@ class PartitionReaderActor(partitionId: Int, connector: ActorRef)
     case Some(event) =>
       connector ! event
     case _ => throw new IOException("no init msg")
-  }
-
-  override def receive: Receive = {
-
-    case ack: Ack =>
-      logger.debug(s"partition $partitionId ack for ${ack.offset}")
-      state = ack.offset
-      // kick off a wheel on every ack
-      read() match {
-        case Some(event) =>
-          logger.debug(s"partition $partitionId new msg")
-          connector ! event
-        case _ => throw new IOException("no new msg")
-      }
-    case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
-
   }
 
 }
