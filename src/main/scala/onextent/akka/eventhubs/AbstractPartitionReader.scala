@@ -57,11 +57,5 @@ abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
 
   }
 
-  // kick off a wheel at init
-  read() match {
-    case Some(event) =>
-      connector ! event
-    case _ => throw new IOException("no init msg")
-  }
 
 }

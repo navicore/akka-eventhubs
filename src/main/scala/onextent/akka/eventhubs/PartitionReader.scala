@@ -17,6 +17,13 @@ object PartitionReader {
 class PartitionReader(partitionId: Int, connector: ActorRef)
     extends AbstractPartitionReader(partitionId, connector) {
 
+  // kick off a wheel at init
+  read() match {
+    case Some(event) =>
+      connector ! event
+    case _ => throw new IOException("no init msg")
+  }
+
   def receive: Receive = receiveCmd
 
   def receiveCmd: Receive = {
