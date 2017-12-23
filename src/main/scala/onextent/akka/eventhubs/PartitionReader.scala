@@ -18,6 +18,7 @@ class PartitionReader(partitionId: Int, connector: ActorRef)
     extends AbstractPartitionReader(partitionId, connector) {
 
   // kick off a wheel at init
+  initReceiver()
   read() match {
     case Some(event) =>
       connector ! event

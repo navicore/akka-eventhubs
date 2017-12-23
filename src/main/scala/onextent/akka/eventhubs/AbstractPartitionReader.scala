@@ -23,13 +23,15 @@ abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
   val ehClient: EventHubClient =
     EventHubClient.createFromConnectionStringSync(connStr.toString)
 
-  val receiver: PartitionReceiver = ehClient.createReceiverSync(
+  lazy val receiver: PartitionReceiver = ehClient.createReceiverSync(
     ehConsumerGroup,
     partitionId.toString,
     state,
     false)
 
-  receiver.setReceiveTimeout(Duration.ofSeconds(20))
+  def initReceiver = () => {
+    receiver.setReceiveTimeout(Duration.ofSeconds(20))
+  }
 
   // wheel to call from init
   def read(): Option[Event] = {

@@ -61,11 +61,16 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
 
   override def receiveRecover: Receive = {
     // BEGIN DB RECOVERY
-    case offset: String => state = offset
+    case offset: String =>
+      state = offset
+      logger.info(s"recovery for offset $state for partition $partitionId")
     case SnapshotOffer(_, snapshot: String) =>
       state = snapshot
+      logger.info(s"recovery snapshot offer for offset $state for partition $partitionId")
     case RecoveryCompleted =>
       // kick off a wheel at init
+      logger.info(s"recovery complete at offset $state for partition $partitionId")
+      initReceiver()
       read() match {
         case Some(event) =>
           connector ! event
