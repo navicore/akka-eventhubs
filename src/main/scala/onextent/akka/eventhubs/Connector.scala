@@ -57,7 +57,7 @@ class Connector() extends Actor with LazyLogging {
         val (next, newQueue) = queue.dequeue
         val (requestor, newRequests) = requests.dequeue
         logger.debug(
-          s"sending to long-waiting requestor from ${next.partitionId}. r q sz: ${requests.size}")
+          s"sending to waiting requestor from ${next.partitionId}. r q sz: ${requests.size}")
         requestor ! next
         state = (newQueue, newRequests)
       }
@@ -71,7 +71,7 @@ class Connector() extends Actor with LazyLogging {
         val (next, newQueue) = queue.dequeue
         state = (newQueue, requests)
         logger.debug(
-          s"sending event to short-waiting requestor from ${next.partitionId} q sz: ${queue.size}")
+          s"sending to requestor from ${next.partitionId} q sz: ${queue.size}")
         sender() ! next
       }
 
