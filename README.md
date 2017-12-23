@@ -90,9 +90,8 @@ sbt sonatypeReleaseAll
 
 TODO:
 
-* support multiple instances (explicit config load)
-* persistent actor (save offsets)
-* support multiple partition readers reading the same partition in same cluster
+* support multiple partition readers reading the same partition/consumerGroup in different clusters
+* support multiple partition readers reading the same partition/consumerGroup in the same cluster
 
 ---
 [Actor Persistence]:https://doc.akka.io/docs/akka/2.5.4/scala/persistence.html
