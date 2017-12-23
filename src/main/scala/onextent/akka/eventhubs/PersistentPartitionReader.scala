@@ -53,7 +53,7 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
       }
 
     case _: SaveSnapshotSuccess =>
-      logger.info(s"snapshot persisted for partition $partitionId")
+      logger.debug(s"snapshot persisted for partition $partitionId")
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
