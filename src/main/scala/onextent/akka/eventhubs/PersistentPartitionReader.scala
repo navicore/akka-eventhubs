@@ -1,7 +1,5 @@
 package onextent.akka.eventhubs
 
-import java.io.IOException
-
 import akka.actor.{ActorRef, Props}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.util.Timeout
@@ -31,25 +29,29 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
   private var persistSeqNr = 0
   private def save = () => {
     persistSeqNr += 1
-    if (persistSeqNr % persistFreq == 0 && persistSeqNr != 0) {
+    if (persistSeqNr % persistFreq == 0) {
+      persistSeqNr = 0
       persist(state) { _ =>
         takeSnapshot()
       }
     }
   }
 
+  var outstandingAcks = 0
+
   override def receiveCommand: Receive = {
 
     case ack: Ack =>
       logger.debug(s"partition $partitionId ack for ${ack.offset}")
       state = ack.offset
+      outstandingAcks -= 1
       save()
-      // kick off a wheel on every ack
-      read() match {
-        case Some(event) =>
-          logger.debug(s"partition $partitionId new msg")
+      // kick off a wheel when outstanding acks are low
+      if (outstandingAcks <= 1) {
+        read().foreach(event => {
+          outstandingAcks += 1
           connector ! event
-        case _ => throw new IOException("no new msg")
+        })
       }
 
     case _: SaveSnapshotSuccess =>
@@ -71,11 +73,10 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
       // kick off a wheel at init
       logger.info(s"recovery complete at offset $state for partition $partitionId")
       initReceiver()
-      read() match {
-        case Some(event) =>
-          connector ! event
-        case _ => throw new IOException("no init msg")
-      }
+      read().foreach(event => {
+        outstandingAcks += 1
+        connector ! event
+      })
     // END DB RECOVERY
   }
 }

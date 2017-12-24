@@ -1,6 +1,5 @@
 package onextent.akka.eventhubs
 
-import java.io.IOException
 import java.time.Duration
 
 import akka.actor.{Actor, ActorRef}
@@ -29,34 +28,25 @@ abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
     state,
     false)
 
-  def initReceiver = () => {
+  def initReceiver: () => Unit = () => {
     receiver.setReceiveTimeout(Duration.ofSeconds(20))
   }
 
   // wheel to call from init
-  def read(): Option[Event] = {
+  def read(): List[Event] = {
 
-    var result: Option[EventData] = None
+    var result: List[EventData] = List()
 
     while (result.isEmpty) {
-
       val receivedEvents = receiver.receiveSync(ehRecieverBatchSize)
       result = Some(receivedEvents) match {
-        case Some(recEv)
-            if Option(recEv.iterator()).isDefined && recEv.iterator().hasNext =>
-          val e: EventData = recEv.iterator().next()
-          Some(e)
-        case _ => None
+        case Some(recEv) if Option(recEv.iterator()).isDefined && recEv.iterator().hasNext =>
+          import scala.collection.JavaConverters._
+          recEv.iterator().asScala.toList
+        case _ => List()
       }
     }
-    result match {
-      case Some(eventData) =>
-        Some(Event(self, partitionId, eventData))
-      case _ =>
-        logger.debug(s"no eventData")
-        None
-    }
-
+    result.map(eventData => Event(self, partitionId, eventData))
   }
 
 

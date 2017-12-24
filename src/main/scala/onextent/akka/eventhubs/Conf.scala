@@ -1,6 +1,5 @@
 package onextent.akka.eventhubs
 
-
 import akka.actor.ActorSystem
 import akka.pattern.AskTimeoutException
 import akka.serialization.SerializationExtension
@@ -56,13 +55,20 @@ trait Conf {
 
   val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
   val persistFreq: Int = conf.getInt("eventhubs-1.persistFreq")
-  val offsetPersistenceId: String = conf.getString("eventhubs-1.offsetPersistenceId")
+  val offsetPersistenceId: String =
+    conf.getString("eventhubs-1.offsetPersistenceId")
   val snapshotInterval: Int = conf.getInt("eventhubs-1.snapshotInterval")
-  val ehRecieverBatchSize: Int = conf.getInt("eventhubs-1.connection.receiverBatchSize")
-  val ehConsumerGroup: String = conf.getString("eventhubs-1.connection.consumerGroup")
+  val ehRecieverBatchSize: Int =
+    conf.getInt("eventhubs-1.connection.receiverBatchSize")
+  if (ehRecieverBatchSize < persistFreq)
+    throw new Exception(
+      s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+  val ehConsumerGroup: String =
+    conf.getString("eventhubs-1.connection.consumerGroup")
   val ehNamespace: String = conf.getString("eventhubs-1.connection.namespace")
   val ehName: String = conf.getString("eventhubs-1.connection.name")
-  val ehAccessPolicy: String = conf.getString("eventhubs-1.connection.accessPolicy")
+  val ehAccessPolicy: String =
+    conf.getString("eventhubs-1.connection.accessPolicy")
   val ehAccessKey: String = conf.getString("eventhubs-1.connection.accessKey")
 
   val partitions: Int = conf.getInt("eventhubs-1.connection.partitions")
