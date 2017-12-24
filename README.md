@@ -10,6 +10,7 @@ Akka Streams Azure Eventhubs Source ~~and Sink~~
 
  * Alpha - under construction
  * does not recover from timeouts yet
+ * tested with Akka 2.5.6
 
 # USAGE
 

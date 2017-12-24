@@ -68,7 +68,7 @@ libraryDependencies ++=
     "com.microsoft.azure" % "azure-eventhubs" % "0.15.1",
 
     "ch.qos.logback" % "logback-classic" % "1.1.7",
-    "com.typesafe" % "config" % "1.2.1",
+    "com.typesafe" % "config" % "1.3.1",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
 
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -79,11 +79,11 @@ libraryDependencies ++=
   )
 
 dependencyOverrides ++= Seq(
+  "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor"  % akkaVersion,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion
 )
 
-mainClass in assembly := Some("onextent.akka.eventhubs.Main")
 assemblyJarName in assembly := "AkkaEventhubs.jar"
 
 assemblyMergeStrategy in assembly := {
