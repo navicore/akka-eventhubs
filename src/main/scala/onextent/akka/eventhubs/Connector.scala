@@ -1,27 +1,48 @@
 package onextent.akka.eventhubs
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.SupervisorStrategy.{Escalate, Restart}
+import akka.actor.{Actor, ActorRef, AllForOneStrategy, OneForOneStrategy, Props, SupervisorStrategy}
+import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.EventData
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
-import onextent.akka.eventhubs.Connector._
+import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage}
 
 import scala.collection.immutable.Queue
+import scala.concurrent.duration.Duration
 
-object Connector {
+object Connector extends LazyLogging {
 
   val name: String = "ConnectorActor"
-  def props()(implicit timeout: Timeout) =
-    Props(new Connector())
+  private def props()(implicit timeout: Timeout) = Props(new Connector())
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
+  final case class RestartMessage()
   final case class Ack(partitionId: Int, offset: String)
   final case class AckableOffset(ackme: Ack, from: ActorRef) {
     def ack(): Unit = {
       from ! ackme
     }
   }
+  def propsWithDispatcherAndRoundRobinRouter(
+      dispatcher: String,
+      nrOfInstances: Int)(implicit timeout: Timeout): Props = {
+    props()
+      .withDispatcher(dispatcher)
+      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
+  }
+  def supervise: SupervisorStrategy = {
+    AllForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
+      case e: Exception =>
+        logger.error(s"ejs *************************** supervise restart due to $e")
+        Restart
+      case e  =>
+        logger.error(s"supervise escalate due to $e")
+        Escalate
+    }
+  }
+
 }
 
 class Connector() extends Actor with LazyLogging {
@@ -84,8 +105,14 @@ class Connector() extends Actor with LazyLogging {
           s"sending to requestor from ${next.partitionId} q sz: ${queue.size}")
         sender() ! next
       }
+    case _: RestartMessage =>
+      throw new Exception("restart")
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
   }
 
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    logger.warn(s"restarting $reason $message")
+    super.preRestart(reason, message)
+  }
 }

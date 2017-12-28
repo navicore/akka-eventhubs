@@ -12,6 +12,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Conf extends Conf with LazyLogging {
 
+  // ejs rude: todo: let user inject actor system
   implicit val actorSystem: ActorSystem = ActorSystem(appName, conf)
   SerializationExtension(actorSystem)
 

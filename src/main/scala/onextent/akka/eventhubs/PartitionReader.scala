@@ -40,7 +40,7 @@ class PartitionReader(partitionId: Int, connector: ActorRef)
 
     case ack: Ack =>
       logger.debug(s"partition $partitionId ack for ${ack.offset}")
-      state = ack.offset
+      if (ack.offset != "") state = ack.offset
       outstandingAcks -= 1
       // kick off a wheel on every ack
       if (outstandingAcks <= 1) {

@@ -1,18 +1,18 @@
 package onextent.akka.eventhubs
 
-import akka.actor.{ActorRef, Props}
-import akka.persistence.{
-  PersistentActor,
-  RecoveryCompleted,
-  SaveSnapshotSuccess,
-  SnapshotOffer
-}
+import akka.actor.SupervisorStrategy.{Escalate, Restart}
+import akka.actor.{ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
+import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
+import com.microsoft.azure.eventhubs.EventHubException
+import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.Connector.Ack
 
-object PersistentPartitionReader {
+import scala.concurrent.duration._
+
+object PersistentPartitionReader extends LazyLogging {
 
   private def props(partitionId: Int, source: ActorRef)(
       implicit timeout: Timeout) =
@@ -26,8 +26,20 @@ object PersistentPartitionReader {
       source: ActorRef)(implicit timeout: Timeout): Props = {
     props(partitionId, source)
       .withDispatcher(dispatcher)
-      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances))
+      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
   }
+
+  def supervise: SupervisorStrategy = {
+    OneForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
+      case e: EventHubException =>
+        logger.error(s"supervise restart due to $e")
+        Restart
+      case e  =>
+        logger.error(s"supervise escalate due to $e")
+        Escalate
+    }
+  }
+
 }
 
 class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
@@ -59,7 +71,7 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
 
     case ack: Ack =>
       logger.debug(s"partition $partitionId ack for ${ack.offset}")
-      state = ack.offset
+      if (ack.offset != "") state = ack.offset
       outstandingAcks -= 1
       save()
       // kick off a wheel when outstanding acks are low
