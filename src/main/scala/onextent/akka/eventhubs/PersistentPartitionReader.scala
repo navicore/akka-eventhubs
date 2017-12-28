@@ -1,17 +1,33 @@
 package onextent.akka.eventhubs
 
 import akka.actor.{ActorRef, Props}
-import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
+import akka.persistence.{
+  PersistentActor,
+  RecoveryCompleted,
+  SaveSnapshotSuccess,
+  SnapshotOffer
+}
+import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.Connector.Ack
 
 object PersistentPartitionReader {
 
-  def props(partitionId: Int, source: ActorRef)(implicit timeout: Timeout) =
+  private def props(partitionId: Int, source: ActorRef)(
+      implicit timeout: Timeout) =
     Props(new PersistentPartitionReader(partitionId, source))
   val nameBase: String = s"PersistentPartitionReader"
 
+  def propsWithDispatcherAndRoundRobinRouter(
+      dispatcher: String,
+      nrOfInstances: Int,
+      partitionId: Int,
+      source: ActorRef)(implicit timeout: Timeout): Props = {
+    props(partitionId, source)
+      .withDispatcher(dispatcher)
+      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances))
+  }
 }
 
 class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
@@ -68,10 +84,12 @@ class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
       logger.info(s"recovery for offset $state for partition $partitionId")
     case SnapshotOffer(_, snapshot: String) =>
       state = snapshot
-      logger.info(s"recovery snapshot offer for offset $state for partition $partitionId")
+      logger.info(
+        s"recovery snapshot offer for offset $state for partition $partitionId")
     case RecoveryCompleted =>
       // kick off a wheel at init
-      logger.info(s"recovery complete at offset $state for partition $partitionId")
+      logger.info(
+        s"recovery complete at offset $state for partition $partitionId")
       initReceiver()
       read().foreach(event => {
         outstandingAcks += 1

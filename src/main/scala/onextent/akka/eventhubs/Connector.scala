@@ -33,13 +33,23 @@ class Connector() extends Actor with LazyLogging {
     n =>
       if (persist) {
         logger.info(s"creating PersistentPartitionReader $n")
-        context.system.actorOf(PersistentPartitionReader.props(n, self),
-                               PersistentPartitionReader.nameBase + n)
+        context.system.actorOf(
+          PersistentPartitionReader.propsWithDispatcherAndRoundRobinRouter(
+            "eventhubs-1.dispatcher",
+            1,
+            n,
+            self),
+          PersistentPartitionReader.nameBase + n)
       } else {
         logger.info(s"creating PartitionReader $n")
-        context.system.actorOf(PartitionReader.props(n, self),
-                               PartitionReader.nameBase + n)
-      }
+        context.system.actorOf(
+          PartitionReader.propsWithDispatcherAndRoundRobinRouter(
+            "eventhubs-1.dispatcher",
+            1,
+            n,
+            self),
+          PartitionReader.nameBase + n)
+    }
   )
 
   var state: (Queue[Event], Queue[ActorRef]) =

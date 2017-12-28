@@ -8,7 +8,6 @@ import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object Conf extends Conf with LazyLogging {
@@ -16,27 +15,22 @@ object Conf extends Conf with LazyLogging {
   implicit val actorSystem: ActorSystem = ActorSystem(appName, conf)
   SerializationExtension(actorSystem)
 
-  implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
-
   val decider: Supervision.Decider = {
 
     case _: AskTimeoutException =>
       // might want to try harder, retry w/backoff if the actor is really supposed to be there
       logger.warn(s"decider discarding message to resume processing")
-      Supervision.Resume
+      //Supervision.Resume
+      Supervision.Restart
 
     case e: java.text.ParseException =>
       logger.warn(
         s"decider discarding unparseable message to resume processing: $e")
       Supervision.Resume
 
-    case e: Throwable =>
-      logger.error(s"decider can not decide: $e", e)
-      Supervision.Stop
-
     case e =>
       logger.error(s"decider can not decide: $e")
-      Supervision.Stop
+      Supervision.Restart
 
   }
 
@@ -52,7 +46,7 @@ trait Conf {
   val conf: Config = overrides.withFallback(ConfigFactory.load())
 
   val appName: String = conf.getString("main.appName")
-
+  val readersPerPartition: Int = conf.getInt("eventhubs-1.connection.readersPerPartition")
   val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
   val persistFreq: Int = conf.getInt("eventhubs-1.persistFreq")
   val offsetPersistenceId: String =
