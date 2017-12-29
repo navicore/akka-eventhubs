@@ -5,7 +5,6 @@ import akka.pattern.ask
 import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.Connector._
 
 import scala.concurrent.Await

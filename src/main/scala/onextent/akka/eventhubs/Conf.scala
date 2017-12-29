@@ -5,6 +5,7 @@ import akka.pattern.AskTimeoutException
 import akka.serialization.SerializationExtension
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Supervision}
 import akka.util.Timeout
+import com.microsoft.azure.eventhubs.ConnectionStringBuilder
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -47,26 +48,8 @@ trait Conf {
   val conf: Config = overrides.withFallback(ConfigFactory.load())
 
   val appName: String = conf.getString("main.appName")
-  val readersPerPartition: Int = conf.getInt("eventhubs-1.connection.readersPerPartition")
-  val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
-  val persistFreq: Int = conf.getInt("eventhubs-1.persistFreq")
-  val offsetPersistenceId: String =
-    conf.getString("eventhubs-1.offsetPersistenceId")
-  val snapshotInterval: Int = conf.getInt("eventhubs-1.snapshotInterval")
-  val ehRecieverBatchSize: Int =
-    conf.getInt("eventhubs-1.connection.receiverBatchSize")
-  if (ehRecieverBatchSize < persistFreq)
-    throw new Exception(
-      s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
-  val ehConsumerGroup: String =
-    conf.getString("eventhubs-1.connection.consumerGroup")
-  val ehNamespace: String = conf.getString("eventhubs-1.connection.namespace")
-  val ehName: String = conf.getString("eventhubs-1.connection.name")
-  val ehAccessPolicy: String =
-    conf.getString("eventhubs-1.connection.accessPolicy")
-  val ehAccessKey: String = conf.getString("eventhubs-1.connection.accessKey")
 
-  val partitions: Int = conf.getInt("eventhubs-1.connection.partitions")
+
   def requestTimeout: Timeout = {
     val t = conf.getString("eventhubs-1.connection.receiverTimeout")
     val d = Duration(t)
@@ -75,3 +58,48 @@ trait Conf {
 
   implicit val timeout: Timeout = requestTimeout
 }
+
+
+trait InputEventHubConf extends Conf {
+  val readersPerPartition: Int =
+    conf.getInt("eventhubs-1.connection.readersPerPartition")
+  val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
+  val persistFreq: Int = conf.getInt("eventhubs-1.persistFreq")
+  val offsetPersistenceId: String =
+    conf.getString("eventhubs-1.offsetPersistenceId")
+  val snapshotInterval: Int = conf.getInt("eventhubs-1.snapshotInterval")
+  val ehRecieverBatchSize: Int =
+    conf.getInt("eventhubs-1.connection.receiverBatchSize")
+  val ehConsumerGroup: String =
+    conf.getString("eventhubs-1.connection.consumerGroup")
+  val ehNamespace: String = conf.getString("eventhubs-1.connection.namespace")
+  val ehName: String = conf.getString("eventhubs-1.connection.name")
+  val ehAccessPolicy: String =
+    conf.getString("eventhubs-1.connection.accessPolicy")
+  val ehAccessKey: String = conf.getString("eventhubs-1.connection.accessKey")
+  val partitions: Int = conf.getInt("eventhubs-1.connection.partitions")
+  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
+  if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+}
+trait OutputEventHubConf extends Conf {
+  val readersPerPartition: Int =
+    conf.getInt("eventhubs-2.connection.readersPerPartition")
+  val persist: Boolean = conf.getBoolean("eventhubs-2.persist")
+  val persistFreq: Int = conf.getInt("eventhubs-2.persistFreq")
+  val offsetPersistenceId: String =
+    conf.getString("eventhubs-2.offsetPersistenceId")
+  val snapshotInterval: Int = conf.getInt("eventhubs-2.snapshotInterval")
+  val ehRecieverBatchSize: Int =
+    conf.getInt("eventhubs-2.connection.receiverBatchSize")
+  val ehConsumerGroup: String =
+    conf.getString("eventhubs-2.connection.consumerGroup")
+  val ehNamespace: String = conf.getString("eventhubs-2.connection.namespace")
+  val ehName: String = conf.getString("eventhubs-2.connection.name")
+  val ehAccessPolicy: String =
+    conf.getString("eventhubs-2.connection.accessPolicy")
+  val ehAccessKey: String = conf.getString("eventhubs-2.connection.accessKey")
+  val partitions: Int = conf.getInt("eventhubs-2.connection.partitions")
+  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
+  if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+}
+

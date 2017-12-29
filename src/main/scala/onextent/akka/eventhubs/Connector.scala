@@ -1,18 +1,17 @@
 package onextent.akka.eventhubs
 
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
-import akka.actor.{Actor, ActorRef, AllForOneStrategy, OneForOneStrategy, Props, SupervisorStrategy}
+import akka.actor.{Actor, ActorRef, AllForOneStrategy, Props, SupervisorStrategy}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.EventData
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage}
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.Duration
 
-object Connector extends LazyLogging {
+object Connector extends LazyLogging with InputEventHubConf {
 
   val name: String = "ConnectorActor"
   private def props()(implicit timeout: Timeout) = Props(new Connector())
@@ -45,7 +44,7 @@ object Connector extends LazyLogging {
 
 }
 
-class Connector() extends Actor with LazyLogging {
+class Connector() extends Actor with LazyLogging with InputEventHubConf {
 
   logger.info("creating ConnectorActor")
 
