@@ -22,7 +22,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
   val connector: ActorRef =
     system.actorOf(
       Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher", 1, eventHubConf),
-      Connector.name + eventHubConf.ehName
+      Connector.name + "-" + eventHubConf.ehName
     )
 
   class DeadLetterMonitor() extends Actor with LazyLogging {

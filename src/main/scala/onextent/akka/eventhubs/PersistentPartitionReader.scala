@@ -7,7 +7,7 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.EventHubException
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Connector.Ack
+import onextent.akka.eventhubs.Connector.{Ack, RestartMessage}
 
 import scala.concurrent.duration._
 
@@ -90,6 +90,9 @@ class PersistentPartitionReader(partitionId: Int,
 
     case _: SaveSnapshotSuccess =>
       logger.debug(s"snapshot persisted for partition $partitionId")
+
+    case _: RestartMessage =>
+      throw new Exception("restart")
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 

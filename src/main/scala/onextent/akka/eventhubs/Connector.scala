@@ -62,7 +62,7 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
             1,
             n,
             self, eventHubConf),
-          PersistentPartitionReader.nameBase + n + eventHubConf.ehName)
+          PersistentPartitionReader.nameBase + "-" + n + "-" + eventHubConf.ehName)
       } else {
         logger.info(s"creating PartitionReader $n")
         context.system.actorOf(
