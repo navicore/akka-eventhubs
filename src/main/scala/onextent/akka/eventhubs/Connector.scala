@@ -99,6 +99,7 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
       // remove from queue
       val (queue, requests) = state
       if (queue.isEmpty) {
+        logger.debug("Pull of empty state - waiting...")
         state = (queue, requests :+ sender())
       } else {
         val (next, newQueue) = queue.dequeue

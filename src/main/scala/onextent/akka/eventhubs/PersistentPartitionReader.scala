@@ -52,7 +52,7 @@ class PersistentPartitionReader(partitionId: Int,
     with PersistentActor {
   import eventHubConf._
 
-  override def persistenceId: String = offsetPersistenceId + "_" + partitionId
+  override def persistenceId: String = offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
 
   private def takeSnapshot = () => {
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0) {

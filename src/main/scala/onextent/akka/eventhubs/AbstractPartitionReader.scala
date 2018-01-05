@@ -32,10 +32,10 @@ abstract class AbstractPartitionReader(partitionId: Int,
 
   // wheel to call from init
   def read(): List[Event] = {
-    val result: List[EventData] = List()
+    var result: List[EventData] = List()
     while (result.isEmpty) {
       val receivedEventsOpt = Option(receiver.receiveSync(ehRecieverBatchSize))
-      receivedEventsOpt match {
+      result = receivedEventsOpt match {
         case Some(receivedEvents) =>
           val itero = Option(receivedEvents.iterator())
           itero match {

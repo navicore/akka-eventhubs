@@ -52,6 +52,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
         new OutHandler {
           override def onPull(): Unit = {
             try {
+              logger.debug("Pull")
               val f = connector ask Pull()
               Await.result(f, eventHubConf.timeout.duration) match {
                 case Event(from, partitionId, eventData) =>
