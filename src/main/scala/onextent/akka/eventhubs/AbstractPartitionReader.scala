@@ -7,7 +7,9 @@ import com.microsoft.azure.eventhubs._
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.Event
 
-abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: EventHubConf)
+abstract class AbstractPartitionReader(partitionId: Int,
+                                       connector: ActorRef,
+                                       eventHubConf: EventHubConf)
     extends Actor
     with LazyLogging {
 
@@ -30,15 +32,18 @@ abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef, ev
 
   // wheel to call from init
   def read(): List[Event] = {
-
     var result: List[EventData] = List()
-
     while (result.isEmpty) {
-      val receivedEvents = receiver.receiveSync(ehRecieverBatchSize)
-      result = Some(receivedEvents) match {
-        case Some(recEv) if Option(recEv.iterator()).isDefined && recEv.iterator().hasNext =>
-          import scala.collection.JavaConverters._
-          recEv.iterator().asScala.toList
+      val receivedEventsOpt = Option(receiver.receiveSync(ehRecieverBatchSize))
+      result = receivedEventsOpt match {
+        case Some(receivedEvents) =>
+          val itero = Option(receivedEvents.iterator())
+          itero match {
+            case Some(iter) if iter.hasNext =>
+              import scala.collection.JavaConverters._
+              iter.asScala.toList
+            case _ => List()
+          }
         case _ => List()
       }
     }

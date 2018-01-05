@@ -22,7 +22,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
   val connector: ActorRef =
     system.actorOf(
       Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher", 1, eventHubConf),
-      Connector.name
+      Connector.name + eventHubConf.ehName
     )
 
   class DeadLetterMonitor() extends Actor with LazyLogging {
@@ -40,7 +40,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
   }
 
   val deadLetterMonitorActor: ActorRef =
-    system.actorOf(Props(new DeadLetterMonitor), name = "DeadLetterMonitor")
+    system.actorOf(Props(new DeadLetterMonitor), name = s"DeadLetterMonitor${eventHubConf.ehName}")
 
   system.eventStream.subscribe(deadLetterMonitorActor, classOf[DeadLetter])
 
@@ -52,6 +52,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
         new OutHandler {
           override def onPull(): Unit = {
             try {
+              logger.debug("Pull")
               val f = connector ask Pull()
               Await.result(f, eventHubConf.timeout.duration) match {
                 case Event(from, partitionId, eventData) =>

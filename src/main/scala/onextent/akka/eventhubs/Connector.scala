@@ -62,7 +62,7 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
             1,
             n,
             self, eventHubConf),
-          PersistentPartitionReader.nameBase + n)
+          PersistentPartitionReader.nameBase + n + eventHubConf.ehName)
       } else {
         logger.info(s"creating PartitionReader $n")
         context.system.actorOf(
@@ -71,7 +71,7 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
             1,
             n,
             self, eventHubConf),
-          PartitionReader.nameBase + n)
+          PartitionReader.nameBase + n + eventHubConf.ehName)
     }
   )
 
@@ -99,6 +99,7 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
       // remove from queue
       val (queue, requests) = state
       if (queue.isEmpty) {
+        logger.debug("Pull of empty state - waiting...")
         state = (queue, requests :+ sender())
       } else {
         val (next, newQueue) = queue.dequeue

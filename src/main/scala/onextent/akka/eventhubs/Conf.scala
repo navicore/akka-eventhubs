@@ -81,8 +81,6 @@ case class EventHubConf(id: Int) extends Conf {
   if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
 }
 
-object InputEventHubConf1 extends EventHubConf(1)
-object InputEventHubConf2 extends EventHubConf(2)
-object OutputEventHubConf1 extends EventHubConf(1)
-object OutputEventHubConf2 extends EventHubConf(2)
+object EventHubConf1 extends EventHubConf(1)
+object EventHubConf2 extends EventHubConf(2)
 

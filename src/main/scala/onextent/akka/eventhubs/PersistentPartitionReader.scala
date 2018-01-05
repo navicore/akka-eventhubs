@@ -17,6 +17,7 @@ object PersistentPartitionReader extends LazyLogging {
                     source: ActorRef,
                     eventHubConf: EventHubConf)(implicit timeout: Timeout) =
     Props(new PersistentPartitionReader(partitionId, source, eventHubConf))
+
   val nameBase: String = s"PersistentPartitionReader"
 
   def propsWithDispatcherAndRoundRobinRouter(
@@ -51,7 +52,7 @@ class PersistentPartitionReader(partitionId: Int,
     with PersistentActor {
   import eventHubConf._
 
-  override def persistenceId: String = offsetPersistenceId + "_" + partitionId
+  override def persistenceId: String = offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
 
   private def takeSnapshot = () => {
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0) {
