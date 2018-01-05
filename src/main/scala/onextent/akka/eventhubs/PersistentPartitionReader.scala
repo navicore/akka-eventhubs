@@ -17,6 +17,7 @@ object PersistentPartitionReader extends LazyLogging {
                     source: ActorRef,
                     eventHubConf: EventHubConf)(implicit timeout: Timeout) =
     Props(new PersistentPartitionReader(partitionId, source, eventHubConf))
+
   val nameBase: String = s"PersistentPartitionReader"
 
   def propsWithDispatcherAndRoundRobinRouter(
