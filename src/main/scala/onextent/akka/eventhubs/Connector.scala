@@ -11,10 +11,10 @@ import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage}
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.Duration
 
-object Connector extends LazyLogging with InputEventHubConf {
+object Connector extends LazyLogging {
 
   val name: String = "ConnectorActor"
-  private def props()(implicit timeout: Timeout) = Props(new Connector())
+  private def props(eventHubConf: EventHubConf)(implicit timeout: Timeout) = Props(new Connector(eventHubConf))
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
   final case class RestartMessage()
@@ -26,8 +26,9 @@ object Connector extends LazyLogging with InputEventHubConf {
   }
   def propsWithDispatcherAndRoundRobinRouter(
       dispatcher: String,
-      nrOfInstances: Int)(implicit timeout: Timeout): Props = {
-    props()
+      nrOfInstances: Int,
+      eventHubConf: EventHubConf)(implicit timeout: Timeout): Props = {
+    props(eventHubConf)
       .withDispatcher(dispatcher)
       .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
   }
@@ -44,7 +45,9 @@ object Connector extends LazyLogging with InputEventHubConf {
 
 }
 
-class Connector() extends Actor with LazyLogging with InputEventHubConf {
+class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
+
+  import eventHubConf._
 
   logger.info("creating ConnectorActor")
 
@@ -58,7 +61,7 @@ class Connector() extends Actor with LazyLogging with InputEventHubConf {
             "eventhubs-1.dispatcher",
             1,
             n,
-            self),
+            self, eventHubConf),
           PersistentPartitionReader.nameBase + n)
       } else {
         logger.info(s"creating PartitionReader $n")
@@ -67,7 +70,7 @@ class Connector() extends Actor with LazyLogging with InputEventHubConf {
             "eventhubs-1.dispatcher",
             1,
             n,
-            self),
+            self, eventHubConf),
           PartitionReader.nameBase + n)
     }
   )

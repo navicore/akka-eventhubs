@@ -9,9 +9,11 @@ import onextent.akka.eventhubs.Connector._
 
 import scala.concurrent.Await
 
-class Eventhubs(implicit system: ActorSystem)
+class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
     extends GraphStage[SourceShape[(String, AckableOffset)]]
     with LazyLogging {
+
+  import eventHubConf._
 
   val out: Outlet[(String, AckableOffset)] = Outlet("EventhubsSource")
 
@@ -19,9 +21,9 @@ class Eventhubs(implicit system: ActorSystem)
 
   val connector: ActorRef =
     system.actorOf(
-      Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher",
-                                                       1),
-      Connector.name)
+      Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher", 1, eventHubConf),
+      Connector.name
+    )
 
   class DeadLetterMonitor() extends Actor with LazyLogging {
     override def receive: Receive = {
@@ -51,7 +53,7 @@ class Eventhubs(implicit system: ActorSystem)
           override def onPull(): Unit = {
             try {
               val f = connector ask Pull()
-              Await.result(f, timeout.duration) match {
+              Await.result(f, eventHubConf.timeout.duration) match {
                 case Event(from, partitionId, eventData) =>
                   val data = new String(eventData.getBytes)
                   logger.debug(

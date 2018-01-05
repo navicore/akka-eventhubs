@@ -59,47 +59,30 @@ trait Conf {
   implicit val timeout: Timeout = requestTimeout
 }
 
+case class EventHubConf(id: Int) extends Conf {
+  val readersPerPartition: Int =
+    conf.getInt(s"eventhubs-$id.connection.readersPerPartition")
+  val persist: Boolean = conf.getBoolean(s"eventhubs-$id.persist")
+  val persistFreq: Int = conf.getInt(s"eventhubs-$id.persistFreq")
+  val offsetPersistenceId: String =
+    conf.getString(s"eventhubs-$id.offsetPersistenceId")
+  val snapshotInterval: Int = conf.getInt(s"eventhubs-$id.snapshotInterval")
+  val ehRecieverBatchSize: Int =
+    conf.getInt(s"eventhubs-$id.connection.receiverBatchSize")
+  val ehConsumerGroup: String =
+    conf.getString(s"eventhubs-$id.connection.consumerGroup")
+  val ehNamespace: String = conf.getString(s"eventhubs-$id.connection.namespace")
+  val ehName: String = conf.getString(s"eventhubs-$id.connection.name")
+  val ehAccessPolicy: String =
+    conf.getString(s"eventhubs-$id.connection.accessPolicy")
+  val ehAccessKey: String = conf.getString(s"eventhubs-$id.connection.accessKey")
+  val partitions: Int = conf.getInt(s"eventhubs-$id.connection.partitions")
+  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
+  if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+}
 
-trait InputEventHubConf extends Conf {
-  val readersPerPartition: Int =
-    conf.getInt("eventhubs-1.connection.readersPerPartition")
-  val persist: Boolean = conf.getBoolean("eventhubs-1.persist")
-  val persistFreq: Int = conf.getInt("eventhubs-1.persistFreq")
-  val offsetPersistenceId: String =
-    conf.getString("eventhubs-1.offsetPersistenceId")
-  val snapshotInterval: Int = conf.getInt("eventhubs-1.snapshotInterval")
-  val ehRecieverBatchSize: Int =
-    conf.getInt("eventhubs-1.connection.receiverBatchSize")
-  val ehConsumerGroup: String =
-    conf.getString("eventhubs-1.connection.consumerGroup")
-  val ehNamespace: String = conf.getString("eventhubs-1.connection.namespace")
-  val ehName: String = conf.getString("eventhubs-1.connection.name")
-  val ehAccessPolicy: String =
-    conf.getString("eventhubs-1.connection.accessPolicy")
-  val ehAccessKey: String = conf.getString("eventhubs-1.connection.accessKey")
-  val partitions: Int = conf.getInt("eventhubs-1.connection.partitions")
-  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
-  if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
-}
-trait OutputEventHubConf extends Conf {
-  val readersPerPartition: Int =
-    conf.getInt("eventhubs-2.connection.readersPerPartition")
-  val persist: Boolean = conf.getBoolean("eventhubs-2.persist")
-  val persistFreq: Int = conf.getInt("eventhubs-2.persistFreq")
-  val offsetPersistenceId: String =
-    conf.getString("eventhubs-2.offsetPersistenceId")
-  val snapshotInterval: Int = conf.getInt("eventhubs-2.snapshotInterval")
-  val ehRecieverBatchSize: Int =
-    conf.getInt("eventhubs-2.connection.receiverBatchSize")
-  val ehConsumerGroup: String =
-    conf.getString("eventhubs-2.connection.consumerGroup")
-  val ehNamespace: String = conf.getString("eventhubs-2.connection.namespace")
-  val ehName: String = conf.getString("eventhubs-2.connection.name")
-  val ehAccessPolicy: String =
-    conf.getString("eventhubs-2.connection.accessPolicy")
-  val ehAccessKey: String = conf.getString("eventhubs-2.connection.accessKey")
-  val partitions: Int = conf.getInt("eventhubs-2.connection.partitions")
-  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
-  if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
-}
+object InputEventHubConf1 extends EventHubConf(1)
+object InputEventHubConf2 extends EventHubConf(2)
+object OutputEventHubConf1 extends EventHubConf(1)
+object OutputEventHubConf2 extends EventHubConf(2)
 

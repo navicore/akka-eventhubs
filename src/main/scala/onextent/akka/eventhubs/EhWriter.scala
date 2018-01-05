@@ -8,13 +8,13 @@ import scala.compat.java8.FutureConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object EhWriter extends LazyLogging with OutputEventHubConf {
+object EhWriter extends LazyLogging {
 
-  def apply(): ((String, String, Option[AckableOffset])) => Future[
+  def apply(eventHubConf: EventHubConf): ((String, String, Option[AckableOffset])) => Future[
     ((String, String, Option[AckableOffset]))] = {
 
     val ehClient: EventHubClient =
-      EventHubClient.createFromConnectionStringSync(connStr)
+      EventHubClient.createFromConnectionStringSync(eventHubConf.connStr)
 
     (msg: ((String, String, Option[AckableOffset]))) =>
       val key = msg._1

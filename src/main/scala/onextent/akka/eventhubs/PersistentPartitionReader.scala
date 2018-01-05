@@ -7,26 +7,28 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.EventHubException
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Conf._
 import onextent.akka.eventhubs.Connector.Ack
 
 import scala.concurrent.duration._
 
 object PersistentPartitionReader extends LazyLogging {
 
-  private def props(partitionId: Int, source: ActorRef)(
-      implicit timeout: Timeout) =
-    Props(new PersistentPartitionReader(partitionId, source))
+  private def props(partitionId: Int,
+                    source: ActorRef,
+                    eventHubConf: EventHubConf)(implicit timeout: Timeout) =
+    Props(new PersistentPartitionReader(partitionId, source, eventHubConf))
   val nameBase: String = s"PersistentPartitionReader"
 
   def propsWithDispatcherAndRoundRobinRouter(
       dispatcher: String,
       nrOfInstances: Int,
       partitionId: Int,
-      source: ActorRef)(implicit timeout: Timeout): Props = {
-    props(partitionId, source)
+      source: ActorRef,
+      eventHubConf: EventHubConf)(implicit timeout: Timeout): Props = {
+    props(partitionId, source, eventHubConf)
       .withDispatcher(dispatcher)
-      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
+      .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances,
+                                 supervisorStrategy = supervise))
   }
 
   def supervise: SupervisorStrategy = {
@@ -34,7 +36,7 @@ object PersistentPartitionReader extends LazyLogging {
       case e: EventHubException =>
         logger.error(s"supervise restart due to $e")
         Restart
-      case e  =>
+      case e =>
         logger.error(s"supervise escalate due to $e")
         Escalate
     }
@@ -42,9 +44,12 @@ object PersistentPartitionReader extends LazyLogging {
 
 }
 
-class PersistentPartitionReader(partitionId: Int, connector: ActorRef)
-    extends AbstractPartitionReader(partitionId, connector)
+class PersistentPartitionReader(partitionId: Int,
+                                connector: ActorRef,
+                                eventHubConf: EventHubConf)
+    extends AbstractPartitionReader(partitionId, connector, eventHubConf)
     with PersistentActor {
+  import eventHubConf._
 
   override def persistenceId: String = offsetPersistenceId + "_" + partitionId
 

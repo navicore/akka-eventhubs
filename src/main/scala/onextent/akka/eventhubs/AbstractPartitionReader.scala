@@ -5,13 +5,13 @@ import java.time.Duration
 import akka.actor.{Actor, ActorRef}
 import com.microsoft.azure.eventhubs._
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Connector._
+import onextent.akka.eventhubs.Connector.Event
 
-
-abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
+abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: EventHubConf)
     extends Actor
-    with InputEventHubConf
     with LazyLogging {
+
+  import eventHubConf._
 
   var state: String = PartitionReceiver.END_OF_STREAM //todo actor persistence
 
@@ -44,6 +44,5 @@ abstract class AbstractPartitionReader(partitionId: Int, connector: ActorRef)
     }
     result.map(eventData => Event(self, partitionId, eventData))
   }
-
 
 }
