@@ -50,6 +50,9 @@ class PersistentPartitionReader(partitionId: Int,
                                 eventHubConf: EventHubConf)
     extends AbstractPartitionReader(partitionId, connector, eventHubConf)
     with PersistentActor {
+
+  logger.info("creating PersistentPartitionReader")
+
   import eventHubConf._
 
   override def persistenceId: String = offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
@@ -118,4 +121,5 @@ class PersistentPartitionReader(partitionId: Int,
       })
     // END DB RECOVERY
   }
+
 }

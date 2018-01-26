@@ -1,12 +1,12 @@
 package onextent.akka.eventhubs
 
-import akka.actor.SupervisorStrategy.{Escalate, Restart}
-import akka.actor.{Actor, ActorRef, AllForOneStrategy, Props, SupervisorStrategy}
+import akka.actor.SupervisorStrategy._
+import akka.actor.{Actor, ActorRef, AllForOneStrategy, PostRestartException, Props, SupervisorStrategy}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.EventData
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage}
+import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage, Start}
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.Duration
@@ -17,6 +17,7 @@ object Connector extends LazyLogging {
   private def props(eventHubConf: EventHubConf)(implicit timeout: Timeout) = Props(new Connector(eventHubConf))
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
+  final case class Start()
   final case class RestartMessage()
   final case class Ack(partitionId: Int, offset: String)
   final case class AckableOffset(ackme: Ack, from: ActorRef) {
@@ -34,8 +35,11 @@ object Connector extends LazyLogging {
   }
   def supervise: SupervisorStrategy = {
     AllForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
+      case e: PostRestartException =>
+        logger.error(s"post restart supervise restart due to $e")
+        Stop
       case e: Exception =>
-        logger.error(s"ejs *************************** supervise restart due to $e")
+        logger.error(s"supervise restart due to $e")
         Restart
       case e  =>
         logger.error(s"supervise escalate due to $e")
@@ -51,34 +55,36 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
 
   logger.info("creating ConnectorActor")
 
-  // create partition actors
-  (0 until partitions).foreach(
-    n =>
-      if (persist) {
-        logger.info(s"creating PersistentPartitionReader $n")
-        context.system.actorOf(
-          PersistentPartitionReader.propsWithDispatcherAndRoundRobinRouter(
-            "eventhubs-1.dispatcher",
-            1,
-            n,
-            self, eventHubConf),
-          PersistentPartitionReader.nameBase + "-" + n + "-" + eventHubConf.ehName)
-      } else {
-        logger.info(s"creating PartitionReader $n")
-        context.system.actorOf(
-          PartitionReader.propsWithDispatcherAndRoundRobinRouter(
-            "eventhubs-1.dispatcher",
-            1,
-            n,
-            self, eventHubConf),
-          PartitionReader.nameBase + n + eventHubConf.ehName)
-    }
-  )
 
   var state: (Queue[Event], Queue[ActorRef]) =
     (Queue[Event](), Queue[ActorRef]())
 
   override def receive: Receive = {
+
+    case _: Start =>
+      // create partition actors
+      (0 until partitions).foreach(
+        n =>
+          if (persist) {
+            logger.info(s"creating PersistentPartitionReader $n")
+            context.system.actorOf(
+              PersistentPartitionReader.propsWithDispatcherAndRoundRobinRouter(
+                "eventhubs-1.dispatcher",
+                1,
+                n,
+                self, eventHubConf),
+              PersistentPartitionReader.nameBase + "-" + n + "-" + eventHubConf.ehName)
+          } else {
+            logger.info(s"creating PartitionReader $n")
+            context.system.actorOf(
+              PartitionReader.propsWithDispatcherAndRoundRobinRouter(
+                "eventhubs-1.dispatcher",
+                1,
+                n,
+                self, eventHubConf),
+              PartitionReader.nameBase + n + eventHubConf.ehName)
+          }
+      )
 
     case event: Event =>
       // add to queue

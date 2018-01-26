@@ -24,6 +24,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
       Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher", 1, eventHubConf),
       Connector.name + "-" + eventHubConf.ehName
     )
+  connector ! Start()
 
   class DeadLetterMonitor() extends Actor with LazyLogging {
     override def receive: Receive = {

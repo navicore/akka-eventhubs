@@ -27,6 +27,8 @@ class PartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: Event
     extends AbstractPartitionReader(partitionId, connector, eventHubConf)
     with Conf {
 
+  logger.info("creating PartitionReader")
+
   var outstandingAcks = 0
   // kick off a wheel at init
   initReceiver()
@@ -53,4 +55,6 @@ class PartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: Event
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
   }
+
+
 }
