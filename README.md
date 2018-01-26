@@ -17,7 +17,8 @@ Akka Streams Azure Eventhubs Source ~~and Sink~~
 update your `build.sbt` dependencies with:
 
 ```scala
-"tech.navicore" %% "akkaeventhubs" % "0.1.7"
+// https://mvnrepository.com/artifact/tech.navicore/akkaeventhubs
+libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.1.13"
 ```
 
 add to `application.conf`
