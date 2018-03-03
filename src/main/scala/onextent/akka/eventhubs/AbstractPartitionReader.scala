@@ -8,7 +8,6 @@ import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.Event
 
 abstract class AbstractPartitionReader(partitionId: Int,
-                                       connector: ActorRef,
                                        eventHubConf: EventHubConf)
     extends Actor
     with LazyLogging {

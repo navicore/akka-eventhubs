@@ -48,7 +48,7 @@ object PersistentPartitionReader extends LazyLogging {
 class PersistentPartitionReader(partitionId: Int,
                                 connector: ActorRef,
                                 eventHubConf: EventHubConf)
-    extends AbstractPartitionReader(partitionId, connector, eventHubConf)
+    extends AbstractPartitionReader(partitionId, eventHubConf)
     with PersistentActor {
 
   logger.info("creating PersistentPartitionReader")
