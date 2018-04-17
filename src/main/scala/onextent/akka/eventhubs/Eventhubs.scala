@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, DeadLetter, Props}
 import akka.pattern.ask
 import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Outlet, SourceShape}
+import com.microsoft.azure.eventhubs.EventPosition
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector._
 
@@ -61,7 +62,7 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
                   logger.debug(
                     s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
                   val ack =
-                    Ack(partitionId, eventData.getSystemProperties.getOffset)
+                    Ack(partitionId, EventPosition.fromOffset(eventData.getSystemProperties.getOffset))
                   push(out, (data, AckableOffset(ack, from)))
                 case x => logger.error(s"I don't know how to handle success $x")
               }

@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-import com.microsoft.azure.eventhubs.EventHubException
+import com.microsoft.azure.eventhubs.{EventHubException, EventPosition}
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.{Ack, RestartMessage}
 
@@ -80,7 +80,7 @@ class PersistentPartitionReader(partitionId: Int,
 
     case ack: Ack =>
       logger.debug(s"partition $partitionId ack for ${ack.offset}")
-      if (ack.offset != "") state = ack.offset
+      state = ack.offset
       outstandingAcks -= 1
       save()
       // kick off a wheel when outstanding acks are low
@@ -103,10 +103,10 @@ class PersistentPartitionReader(partitionId: Int,
 
   override def receiveRecover: Receive = {
     // BEGIN DB RECOVERY
-    case offset: String =>
+    case offset: EventPosition =>
       state = offset
       logger.info(s"recovery for offset $state for partition $partitionId")
-    case SnapshotOffer(_, snapshot: String) =>
+    case SnapshotOffer(_, snapshot: EventPosition) =>
       state = snapshot
       logger.info(
         s"recovery snapshot offer for offset $state for partition $partitionId")

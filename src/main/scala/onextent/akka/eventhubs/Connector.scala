@@ -4,7 +4,7 @@ import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, AllForOneStrategy, PostRestartException, Props, SupervisorStrategy}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-import com.microsoft.azure.eventhubs.EventData
+import com.microsoft.azure.eventhubs.{EventData, EventPosition}
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage, Start}
 
@@ -19,7 +19,7 @@ object Connector extends LazyLogging {
   final case class Pull()
   final case class Start()
   final case class RestartMessage()
-  final case class Ack(partitionId: Int, offset: String)
+  final case class Ack(partitionId: Int, offset: EventPosition)
   final case class AckableOffset(ackme: Ack, from: ActorRef) {
     def ack(): Unit = {
       from ! ackme

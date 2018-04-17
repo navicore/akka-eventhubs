@@ -42,7 +42,8 @@ case class EventHubConf(id: Int) extends Conf {
     conf.getString(s"eventhubs-$id.connection.accessPolicy")
   val ehAccessKey: String = conf.getString(s"eventhubs-$id.connection.accessKey")
   val partitions: Int = conf.getInt(s"eventhubs-$id.connection.partitions")
-  val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
+  //val connStr: String = new ConnectionStringBuilder(ehNamespace, ehName, ehAccessPolicy, ehAccessKey).toString
+  val connStr: String = new ConnectionStringBuilder().setNamespaceName(ehNamespace).setEventHubName(ehName).setSasKeyName(ehAccessPolicy).setSasKey(ehAccessKey).toString
   if (ehRecieverBatchSize < persistFreq) throw new Exception( s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
 }
 

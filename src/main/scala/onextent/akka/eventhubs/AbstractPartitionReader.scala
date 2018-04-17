@@ -2,7 +2,7 @@ package onextent.akka.eventhubs
 
 import java.time.Duration
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.Actor
 import com.microsoft.azure.eventhubs._
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.Event
@@ -14,16 +14,20 @@ abstract class AbstractPartitionReader(partitionId: Int,
 
   import eventHubConf._
 
-  var state: String = PartitionReceiver.END_OF_STREAM //todo actor persistence
+  var state: EventPosition = EventPosition.fromEndOfStream()
 
+  import java.util.concurrent.{ExecutorService, Executors}
+
+  val executorService: ExecutorService = Executors.newSingleThreadExecutor
   val ehClient: EventHubClient =
-    EventHubClient.createFromConnectionStringSync(connStr.toString)
+    EventHubClient.createSync(connStr, executorService)
+  //EventHubClient.createFromConnectionStringSync(connStr.toString)
 
-  lazy val receiver: PartitionReceiver = ehClient.createReceiverSync(
+  lazy val receiver: PartitionReceiver = ehClient.createEpochReceiverSync(
     ehConsumerGroup,
     partitionId.toString,
     state,
-    false)
+    1)
 
   def initReceiver: () => Unit = () => {
     receiver.setReceiveTimeout(Duration.ofSeconds(20))

@@ -16,8 +16,7 @@ val scala212 = "2.12.4"
 val scala211 = "2.11.12"
 
 crossScalaVersions := Seq(scala212, scala211)
-ensimeScalaVersion in ThisBuild := scala212
-val akkaVersion = "2.5.6"
+val akkaVersion = "2.5.11"
 
 publishMavenStyle := true
 
@@ -65,17 +64,17 @@ publishTo := Some(
 
 libraryDependencies ++=
   Seq(
-    "com.microsoft.azure" % "azure-eventhubs" % "0.15.1",
+    "com.microsoft.azure" % "azure-eventhubs" % "1.0.1",
 
     "ch.qos.logback" % "logback-classic" % "1.1.7",
-    "com.typesafe" % "config" % "1.3.1",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
+    "com.typesafe" % "config" % "1.3.3",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
 
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
 
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.5" % "test"
   )
 
 dependencyOverrides ++= Seq(
