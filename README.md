@@ -24,6 +24,22 @@ libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.1.18"
 add to `application.conf`
 
 ```
+eventhubs {
+
+  dispatcher {
+    type = Dispatcher
+    executor = "thread-pool-executor"
+    thread-pool-executor {
+      core-pool-size-min = 4
+      core-pool-size-factor = 2.0
+      core-pool-size-max = 8
+    }
+    throughput = 10
+    mailbox-capacity = -1
+    mailbox-type = ""
+  }
+
+}
 eventhubs-1 {
 
   persist = false
@@ -112,8 +128,8 @@ sbt sonatypeReleaseAll
 
 TODO:
 
-* support multiple partition readers reading the same partition/consumerGroup in different clusters
-* support multiple partition readers reading the same partition/consumerGroup in the same cluster
+* FLOW helper function
+* instrumentation plugin api (for statsd, nr, etc...)
 
 ---
 [Actor Persistence]:https://doc.akka.io/docs/akka/2.5.4/scala/persistence.html
