@@ -24,8 +24,7 @@ object PartitionReader {
 }
 
 class PartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: EventHubConf)
-    extends AbstractPartitionReader(partitionId, eventHubConf)
-    with Conf {
+    extends AbstractPartitionReader(partitionId, eventHubConf) {
 
   logger.info("creating PartitionReader")
 

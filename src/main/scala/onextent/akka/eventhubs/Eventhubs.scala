@@ -15,14 +15,15 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
     with LazyLogging {
 
   import eventHubConf._
-
   val out: Outlet[(String, AckableOffset)] = Outlet("EventhubsSource")
 
   override val shape: SourceShape[(String, AckableOffset)] = SourceShape(out)
 
   val connector: ActorRef =
     system.actorOf(
-      Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher", 1, eventHubConf),
+      Connector.propsWithDispatcherAndRoundRobinRouter("eventhubs-1.dispatcher",
+                                                       1,
+                                                       eventHubConf),
       Connector.name + "-" + eventHubConf.ehName
     )
   connector ! Start()
@@ -42,7 +43,8 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
   }
 
   val deadLetterMonitorActor: ActorRef =
-    system.actorOf(Props(new DeadLetterMonitor), name = s"DeadLetterMonitor${eventHubConf.ehName}")
+    system.actorOf(Props(new DeadLetterMonitor),
+                   name = s"DeadLetterMonitor${eventHubConf.ehName}")
 
   system.eventStream.subscribe(deadLetterMonitorActor, classOf[DeadLetter])
 
@@ -56,13 +58,15 @@ class Eventhubs(eventHubConf: EventHubConf)(implicit system: ActorSystem)
             try {
               logger.debug("Pull")
               val f = connector ask Pull()
-              Await.result(f, eventHubConf.timeout.duration) match {
+              Await.result(f, eventHubConf.requestDuration) match {
                 case Event(from, partitionId, eventData) =>
                   val data = new String(eventData.getBytes)
                   logger.debug(
                     s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
                   val ack =
-                    Ack(partitionId, EventPosition.fromOffset(eventData.getSystemProperties.getOffset))
+                    Ack(partitionId,
+                        EventPosition.fromOffset(
+                          eventData.getSystemProperties.getOffset))
                   push(out, (data, AckableOffset(ack, from)))
                 case x => logger.error(s"I don't know how to handle success $x")
               }
