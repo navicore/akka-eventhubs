@@ -18,7 +18,7 @@ update your `build.sbt` dependencies with:
 
 ```scala
 // https://mvnrepository.com/artifact/tech.navicore/akkaeventhubs
-libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.1.13"
+libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.1.18"
 ```
 
 add to `application.conf`
@@ -46,20 +46,40 @@ eventhubs-1 {
 }
 ```
 
-ack the the item once processed:
+ack the the item once processed for a partition source:
 
 ```scala
-import akka.stream.scaladsl.Source
-import onextent.akka.eventhubs.Eventhubs
-import onextent.akka.eventhubs.Conf._
-object Main extends App {
-  val sourceGraph = new Eventhubs
-  val mySource = Source.fromGraph(sourceGraph)
-  mySource.runForeach(m => {
-    println(s"yay: ${m._1}")
-    m._2.ack()
-  })
-}
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+
+    val source1 = createPartitionSource(0, cfg)
+
+    source1.runForeach(m => {
+        println(s"SINGLE SOURCE: ${m._1.substring(0, 160)}")
+        m._2.ack()
+    })
+```
+
+ack the the item once processed after merging all the partition sources:
+
+```scala
+    val consumer: Sink[(String, AckableOffset), Future[Done]] =
+    Sink.foreach(m => {
+        println(s"SUPER SOURCE: ${m._1.substring(0, 160)}")
+        m._2.ack()
+    })
+
+    val toConsumer = createToConsumer(consumer)
+
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+
+    for (pid <- 0 to EventHubConf(cfg).partitions) {
+
+        val src: Source[(String, AckableOffset), NotUsed] =
+          createPartitionSource(pid, cfg)
+
+        src.runWith(toConsumer)
+
+    }
 ```
 
 ### With Persistence of Offsets

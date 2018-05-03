@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 object Connector extends LazyLogging {
 
   val name: String = "ConnectorActor"
-  private def props(eventHubConf: EventHubConf)(implicit timeout: Timeout) = Props(new Connector(eventHubConf))
+  private def props(eventHubConf: EventHubConf, partitionId: Int)(implicit timeout: Timeout) = Props(new Connector(eventHubConf, partitionId: Int))
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
   final case class Start()
@@ -28,8 +28,9 @@ object Connector extends LazyLogging {
   def propsWithDispatcherAndRoundRobinRouter(
       dispatcher: String,
       nrOfInstances: Int,
-      eventHubConf: EventHubConf)(implicit timeout: Timeout): Props = {
-    props(eventHubConf)
+      eventHubConf: EventHubConf,
+      partitionId: Int)(implicit timeout: Timeout): Props = {
+    props(eventHubConf, partitionId)
       .withDispatcher(dispatcher)
       .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
   }
@@ -49,7 +50,7 @@ object Connector extends LazyLogging {
 
 }
 
-class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
+class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with LazyLogging {
 
   import eventHubConf._
 
@@ -62,29 +63,25 @@ class Connector(eventHubConf: EventHubConf) extends Actor with LazyLogging {
   override def receive: Receive = {
 
     case _: Start =>
-      // create partition actors
-      (0 until partitions).foreach(
-        n =>
-          if (persist) {
-            logger.info(s"creating PersistentPartitionReader $n")
-            context.system.actorOf(
-              PersistentPartitionReader.propsWithDispatcherAndRoundRobinRouter(
-                "eventhubs-1.dispatcher",
-                1,
-                n,
-                self, eventHubConf),
-              PersistentPartitionReader.nameBase + "-" + n + "-" + eventHubConf.ehName)
-          } else {
-            logger.info(s"creating PartitionReader $n")
-            context.system.actorOf(
-              PartitionReader.propsWithDispatcherAndRoundRobinRouter(
-                "eventhubs-1.dispatcher",
-                1,
-                n,
-                self, eventHubConf),
-              PartitionReader.nameBase + n + eventHubConf.ehName)
-          }
-      )
+      if (persist) {
+        logger.info(s"creating PersistentPartitionReader $partitionId")
+        context.system.actorOf(
+          PersistentPartitionReader.propsWithDispatcherAndRoundRobinRouter(
+            s"eventhubs.dispatcher",
+            1,
+            partitionId,
+            self, eventHubConf),
+          PersistentPartitionReader.nameBase + "-" + partitionId + "-" + eventHubConf.ehName)
+      } else {
+        logger.info(s"creating PartitionReader $partitionId")
+        context.system.actorOf(
+          PartitionReader.propsWithDispatcherAndRoundRobinRouter(
+            s"eventhubs.dispatcher",
+            1,
+            partitionId,
+            self, eventHubConf),
+          PartitionReader.nameBase + partitionId + eventHubConf.ehName)
+      }
 
     case event: Event =>
       // add to queue
