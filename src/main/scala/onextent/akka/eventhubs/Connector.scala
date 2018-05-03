@@ -54,7 +54,7 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with
 
   import eventHubConf._
 
-  logger.info("creating ConnectorActor")
+  logger.info(s"creating ConnectorActor $partitionId")
 
 
   var state: (Queue[Event], Queue[ActorRef]) =

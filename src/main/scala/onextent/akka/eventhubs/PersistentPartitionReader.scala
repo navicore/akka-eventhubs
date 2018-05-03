@@ -51,7 +51,7 @@ class PersistentPartitionReader(partitionId: Int,
     extends AbstractPartitionReader(partitionId, eventHubConf)
     with PersistentActor {
 
-  logger.info("creating PersistentPartitionReader")
+  logger.info(s"creating PersistentPartitionReader $partitionId")
 
   import eventHubConf._
 
