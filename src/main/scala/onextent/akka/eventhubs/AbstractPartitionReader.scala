@@ -21,7 +21,6 @@ abstract class AbstractPartitionReader(partitionId: Int,
   val executorService: ExecutorService = Executors.newSingleThreadExecutor
   val ehClient: EventHubClient =
     EventHubClient.createSync(connStr, executorService)
-  //EventHubClient.createFromConnectionStringSync(connStr.toString)
 
   lazy val receiver: PartitionReceiver = ehClient.createEpochReceiverSync(
     ehConsumerGroup,
