@@ -46,44 +46,40 @@ eventhubs-1 {
 }
 ```
 
-// todo: simple 1 partition example:
+ack the the item once processed for a partition source:
+
+```scala
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+
+    val source1 = createPartitionSource(0, cfg)
+
+    source1.runForeach(m => {
+        println(s"SINGLE SOURCE: ${m._1.substring(0, 160)}")
+        m._2.ack()
+    })
+```
 
 ack the the item once processed after merging all the partition sources:
 
 ```scala
-import akka.stream.scaladsl.{Sink, Source}
-import akka.{Done, NotUsed}
-import com.typesafe.config.{Config, ConfigFactory}
-import onextent.akka.ehexample.Conf._
-import onextent.akka.eventhubs.Connector.AckableOffset
-import onextent.akka.eventhubs.EventHubConf
-import onextent.akka.eventhubs.Eventhubs._
-
-import scala.concurrent.Future
-
-object Main extends App {
-
-  val consumer: Sink[(String, AckableOffset), Future[Done]] =
+    val consumer: Sink[(String, AckableOffset), Future[Done]] =
     Sink.foreach(m => {
-      println(s"SUPER SOURCE: ${m._1.substring(0, 160)}")
-      m._2.ack()
+        println(s"SUPER SOURCE: ${m._1.substring(0, 160)}")
+        m._2.ack()
     })
 
-  val toConsumer = createToConsumer(consumer)
+    val toConsumer = createToConsumer(consumer)
 
-  val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
 
-  for (pid <- 0 to EventHubConf(cfg).partitions) {
+    for (pid <- 0 to EventHubConf(cfg).partitions) {
 
-    val src: Source[(String, AckableOffset), NotUsed] =
-      createPartitionSource(pid, cfg)
+        val src: Source[(String, AckableOffset), NotUsed] =
+          createPartitionSource(pid, cfg)
 
-    src.runWith(toConsumer)
+        src.runWith(toConsumer)
 
-  }
-
-}
-
+    }
 ```
 
 ### With Persistence of Offsets
