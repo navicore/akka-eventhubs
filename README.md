@@ -79,16 +79,16 @@ ack the the item once processed after merging all the partition sources:
 
 ```scala
     val consumer: Sink[(String, AckableOffset), Future[Done]] =
-    Sink.foreach(m => {
-        println(s"SUPER SOURCE: ${m._1.substring(0, 160)}")
-        m._2.ack()
-    })
+        Sink.foreach(m => {
+            println(s"SUPER SOURCE: ${m._1.substring(0, 160)}")
+            m._2.ack()
+        })
 
     val toConsumer = createToConsumer(consumer)
 
     val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
 
-    for (pid <- 0 to EventHubConf(cfg).partitions) {
+    for (pid <- 0 until  EventHubConf(cfg).partitions) {
 
         val src: Source[(String, AckableOffset), NotUsed] =
           createPartitionSource(pid, cfg)
