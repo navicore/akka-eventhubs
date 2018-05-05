@@ -25,12 +25,6 @@ object Eventhubs {
     Source.fromGraph(sg)
   }
 
-  // TODO: create a toFlow helper
-  // TODO: create a toFlow helper
-  // TODO: create a toFlow helper
-  // TODO: create a toFlow helper
-  // TODO: create a toFlow helper
-
   def createToConsumer(consumer: Sink[(String, AckableOffset), Future[Done]])(
       implicit s: ActorSystem,
       m: Materializer): Sink[(String, AckableOffset), NotUsed] = {
