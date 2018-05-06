@@ -29,6 +29,7 @@ case class EventHubConf(cfg: Config) {
   if (ehRecieverBatchSize < persistFreq)
     throw new Exception(
       s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+  val defaultOffset: String = cfg.getString("connection.defaultOffset") // LATEST or EARLIEST
 
   def requestDuration: Duration = {
     val t = cfg.getString("connection.receiverTimeout")

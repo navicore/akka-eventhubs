@@ -14,7 +14,12 @@ abstract class AbstractPartitionReader(partitionId: Int,
 
   import eventHubConf._
 
-  var state: EventPosition = EventPosition.fromEndOfStream()
+  var state: EventPosition =
+    if (defaultOffset.equals("LATEST")) {
+      EventPosition.fromEndOfStream()
+    } else {
+      EventPosition.fromStartOfStream()
+    }
 
   import java.util.concurrent.{ExecutorService, Executors}
 
