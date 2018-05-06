@@ -6,12 +6,6 @@ Akka Eventhubs
 
 Akka Streams Azure Eventhubs Source ~~and Sink~~
 
-# STATUS
-
- * Alpha - under construction
- * does not recover from timeouts yet
- * tested with Akka 2.5.6
-
 # USAGE
 
 update your `build.sbt` dependencies with:
@@ -125,11 +119,6 @@ sbt +publishLocalSigned
 sbt +publishSigned
 sbt sonatypeReleaseAll
 ```
-
-TODO:
-
-* FLOW helper function
-* instrumentation plugin api (for statsd, nr, etc...)
 
 ---
 [Actor Persistence]:https://doc.akka.io/docs/akka/2.5.4/scala/persistence.html
