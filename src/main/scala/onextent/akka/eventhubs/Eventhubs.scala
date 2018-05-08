@@ -105,7 +105,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               }
             } catch {
               case _: java.util.concurrent.TimeoutException =>
-                logger.error("pull request timeout")
+                logger.error(s"pull request timeout for partition $partitionId")
                 //todo: make smarter and less violent
                 connector ! RestartMessage()
                 onPull() //todo do more than hope the stack doesn't fill
