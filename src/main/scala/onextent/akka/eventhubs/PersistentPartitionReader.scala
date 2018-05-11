@@ -1,19 +1,20 @@
 package onextent.akka.eventhubs
 
-import akka.actor.SupervisorStrategy.{Escalate, Restart}
+import akka.actor.SupervisorStrategy.Restart
 import akka.actor.{ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.{EventHubException, EventPosition}
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Connector.{Ack, RestartMessage}
+import onextent.akka.eventhubs.Connector.Ack
 
 import scala.concurrent.duration._
 
 object PersistentPartitionReader extends LazyLogging {
 
   private def props(partitionId: Int,
+                    seed: Long,
                     source: ActorRef,
                     eventHubConf: EventHubConf)(implicit timeout: Timeout) =
     Props(new PersistentPartitionReader(partitionId, source, eventHubConf))
@@ -24,9 +25,10 @@ object PersistentPartitionReader extends LazyLogging {
       dispatcher: String,
       nrOfInstances: Int,
       partitionId: Int,
+      seed: Long,
       source: ActorRef,
       eventHubConf: EventHubConf)(implicit timeout: Timeout): Props = {
-    props(partitionId, source, eventHubConf)
+    props(partitionId, seed, source, eventHubConf)
       .withDispatcher(dispatcher)
       .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances,
                                  supervisorStrategy = supervise))
@@ -38,8 +40,8 @@ object PersistentPartitionReader extends LazyLogging {
         logger.error(s"supervise restart due to $e")
         Restart
       case e =>
-        logger.error(s"supervise escalate due to $e")
-        Escalate
+        logger.error(s"supervise restart due to $e")
+        Restart
     }
   }
 
@@ -55,10 +57,12 @@ class PersistentPartitionReader(partitionId: Int,
 
   import eventHubConf._
 
-  override def persistenceId: String = offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
+  override def persistenceId: String =
+    offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
 
   private def takeSnapshot = () => {
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0) {
+      logger.info(s"pid $partitionId takeSnapshot lastSequenceNr $lastSequenceNr")
       saveSnapshot(state)
     }
   }
@@ -94,9 +98,6 @@ class PersistentPartitionReader(partitionId: Int,
     case _: SaveSnapshotSuccess =>
       logger.debug(s"snapshot persisted for partition $partitionId")
 
-    case _: RestartMessage =>
-      throw new Exception("restart")
-
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
   }
@@ -105,10 +106,10 @@ class PersistentPartitionReader(partitionId: Int,
     // BEGIN DB RECOVERY
     case offset: EventPosition =>
       state = offset
-      logger.info(s"recovery for offset $state for partition $partitionId")
+      logger.debug(s"recovery for offset $state for partition $partitionId")
     case SnapshotOffer(_, snapshot: EventPosition) =>
       state = snapshot
-      logger.info(
+      logger.debug(
         s"recovery snapshot offer for offset $state for partition $partitionId")
     case RecoveryCompleted =>
       // kick off a wheel at init

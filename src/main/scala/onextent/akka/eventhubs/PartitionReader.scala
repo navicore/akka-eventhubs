@@ -7,23 +7,24 @@ import onextent.akka.eventhubs.Connector.Ack
 
 object PartitionReader {
 
-  private def props(partitionId: Int, source: ActorRef, eventHubConf: EventHubConf)(
+  private def props(partitionId: Int, seed: Long, source: ActorRef, eventHubConf: EventHubConf)(
       implicit timeout: Timeout) =
-    Props(new PartitionReader(partitionId, source, eventHubConf))
+    Props(new PartitionReader(partitionId, seed, source, eventHubConf))
   val nameBase: String = s"PartitionReader"
   def propsWithDispatcherAndRoundRobinRouter(
       dispatcher: String,
       nrOfInstances: Int,
       partitionId: Int,
+      seed: Long,
       source: ActorRef,
       eventHubConf: EventHubConf)(implicit timeout: Timeout): Props = {
-    props(partitionId, source, eventHubConf)
+    props(partitionId, seed, source, eventHubConf)
       .withDispatcher(dispatcher)
       .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances))
   }
 }
 
-class PartitionReader(partitionId: Int, connector: ActorRef, eventHubConf: EventHubConf)
+class PartitionReader(partitionId: Int, seed: Long, connector: ActorRef, eventHubConf: EventHubConf)
     extends AbstractPartitionReader(partitionId, eventHubConf) {
 
   logger.info("creating PartitionReader")

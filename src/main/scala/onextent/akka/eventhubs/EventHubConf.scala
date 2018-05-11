@@ -26,9 +26,9 @@ case class EventHubConf(cfg: Config) {
     .setSasKeyName(ehAccessPolicy)
     .setSasKey(ehAccessKey)
     .toString
-  if (ehRecieverBatchSize < persistFreq)
-    throw new Exception(
-      s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+//  if (ehRecieverBatchSize < persistFreq)
+//    throw new Exception(
+//      s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
   val defaultOffset: String = cfg.getString("connection.defaultOffset") // LATEST or EARLIEST
 
   def requestDuration: Duration = {

@@ -1,11 +1,11 @@
 package onextent.akka.eventhubs
 
-import akka.{Done, NotUsed}
-import akka.actor.{Actor, ActorRef, ActorSystem, DeadLetter, Props}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.pattern.ask
 import akka.stream.scaladsl.{MergeHub, RunnableGraph, Sink, Source}
 import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
 import akka.stream.{Attributes, Materializer, Outlet, SourceShape}
+import akka.{Done, NotUsed}
 import com.microsoft.azure.eventhubs.EventPosition
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
@@ -50,36 +50,21 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
 
   override val shape: SourceShape[(String, AckableOffset)] = SourceShape(out)
 
-  val connector: ActorRef =
-    system.actorOf(
+  private def initConnector(): ActorRef = {
+    val seed: Long = System.currentTimeMillis()
+    val c: ActorRef = system.actorOf(
       Connector.propsWithDispatcherAndRoundRobinRouter(s"eventhubs.dispatcher",
                                                        1,
+                                                       seed,
                                                        eventHubConf,
                                                        partitionId),
-      Connector.name + "-" + partitionId + eventHubConf.ehName
+      Connector.name + "-" + partitionId + eventHubConf.ehName + "-" + seed
     )
-  connector ! Start()
-
-  class DeadLetterMonitor() extends Actor with LazyLogging {
-    override def receive: Receive = {
-      case d: DeadLetter =>
-        d.message match {
-          case a: Ack =>
-            logger.error(s"DeadLetterMonitorActor : saw ACK dead letter $a")
-          case _ =>
-            logger.error(s"DeadLetterMonitorActor : saw dead letter $d")
-        }
-      case x =>
-        logger.error(s"I don't know how to handle ${x.getClass.getName}")
-    }
+    c ! Start()
+    c
   }
 
-  val deadLetterMonitorActor: ActorRef =
-    system.actorOf(Props(new DeadLetterMonitor),
-                   name =
-                     s"DeadLetterMonitor${eventHubConf.ehName}-$partitionId")
-
-  system.eventStream.subscribe(deadLetterMonitorActor, classOf[DeadLetter])
+  var connector: ActorRef = initConnector()
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
@@ -105,10 +90,11 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               }
             } catch {
               case _: java.util.concurrent.TimeoutException =>
-                logger.error(s"pull request timeout for partition $partitionId")
-                //todo: make smarter and less violent
-                connector ! RestartMessage()
-                onPull() //todo do more than hope the stack doesn't fill
+                logger.warn(
+                  s"pull request timeout for partition $partitionId. restarting...")
+                connector ! PoisonPill
+                connector = initConnector()
+                onPull()
             }
           }
         }

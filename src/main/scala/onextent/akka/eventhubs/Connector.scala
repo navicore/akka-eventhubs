@@ -6,7 +6,7 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.{EventData, EventPosition}
 import com.typesafe.scalalogging.LazyLogging
-import onextent.akka.eventhubs.Connector.{Event, Pull, RestartMessage, Start}
+import onextent.akka.eventhubs.Connector.{Event, Pull, Start}
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.Duration
@@ -14,11 +14,10 @@ import scala.concurrent.duration.Duration
 object Connector extends LazyLogging {
 
   val name: String = "ConnectorActor"
-  private def props(eventHubConf: EventHubConf, partitionId: Int)(implicit timeout: Timeout) = Props(new Connector(eventHubConf, partitionId: Int))
+  private def props(eventHubConf: EventHubConf, partitionId: Int, seed: Long)(implicit timeout: Timeout) = Props(new Connector(eventHubConf, partitionId: Int, seed: Long))
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
   final case class Start()
-  final case class RestartMessage()
   final case class Ack(partitionId: Int, offset: EventPosition)
   final case class AckableOffset(ackme: Ack, from: ActorRef) {
     def ack(): Unit = {
@@ -28,9 +27,10 @@ object Connector extends LazyLogging {
   def propsWithDispatcherAndRoundRobinRouter(
       dispatcher: String,
       nrOfInstances: Int,
+      seed: Long,
       eventHubConf: EventHubConf,
       partitionId: Int)(implicit timeout: Timeout): Props = {
-    props(eventHubConf, partitionId)
+    props(eventHubConf, partitionId, seed)
       .withDispatcher(dispatcher)
       .withRouter(RoundRobinPool(nrOfInstances = nrOfInstances, supervisorStrategy = supervise))
   }
@@ -50,7 +50,7 @@ object Connector extends LazyLogging {
 
 }
 
-class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with LazyLogging {
+class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extends Actor with LazyLogging {
 
   import eventHubConf._
 
@@ -70,8 +70,9 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with
             s"eventhubs.dispatcher",
             1,
             partitionId,
+            seed,
             self, eventHubConf),
-          PersistentPartitionReader.nameBase + "-" + partitionId + "-" + eventHubConf.ehName)
+          PersistentPartitionReader.nameBase + "-" + partitionId + "-" + eventHubConf.ehName + "-" + seed)
       } else {
         logger.info(s"creating PartitionReader $partitionId")
         context.system.actorOf(
@@ -79,8 +80,10 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with
             s"eventhubs.dispatcher",
             1,
             partitionId,
-            self, eventHubConf),
-          PartitionReader.nameBase + partitionId + eventHubConf.ehName)
+            seed,
+            self,
+            eventHubConf),
+          PartitionReader.nameBase + partitionId + eventHubConf.ehName + "-" + seed)
       }
 
     case event: Event =>
@@ -111,8 +114,6 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int) extends Actor with
           s"sending to requestor from ${next.partitionId} q sz: ${queue.size}")
         sender() ! next
       }
-    case _: RestartMessage =>
-      throw new Exception("restart")
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
   }
