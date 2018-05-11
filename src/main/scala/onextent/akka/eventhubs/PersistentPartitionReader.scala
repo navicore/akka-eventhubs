@@ -98,7 +98,12 @@ class PersistentPartitionReader(partitionId: Int,
     case _: SaveSnapshotSuccess =>
       logger.debug(s"snapshot persisted for partition $partitionId")
 
-    case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
+    case x: akka.persistence.SaveSnapshotFailure =>
+      logger.error(s"pid $partitionId snapshot failure: ${x.cause}")
+      throw x.cause
+
+    case x:Throwable =>
+      logger.error(s"pid $partitionId I don't know how to handle ${x.getClass.getName}")
 
   }
 
