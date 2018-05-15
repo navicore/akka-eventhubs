@@ -57,4 +57,9 @@ abstract class AbstractPartitionReader(partitionId: Int,
     result.map(eventData => Event(self, partitionId, eventData))
   }
 
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    logger.info(s"preRestart calling close on ehClient for pid $partitionId")
+    ehClient.closeSync()
+    super.preRestart(reason, message)
+  }
 }

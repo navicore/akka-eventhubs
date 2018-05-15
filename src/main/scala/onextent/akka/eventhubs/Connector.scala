@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.{Event, Pull, Start}
 
 import scala.collection.immutable.Queue
+import scala.collection.mutable
 import scala.concurrent.duration.Duration
 
 object Connector extends LazyLogging {
@@ -18,7 +19,7 @@ object Connector extends LazyLogging {
   final case class Event(from: ActorRef, partitionId: Int, eventData: EventData)
   final case class Pull()
   final case class Start()
-  final case class Ack(partitionId: Int, offset: EventPosition)
+  final case class Ack(partitionId: Int, offset: EventPosition, properties: mutable.Map[String, AnyRef])
   final case class AckableOffset(ackme: Ack, from: ActorRef) {
     def ack(): Unit = {
       from ! ackme

@@ -7,8 +7,6 @@ import com.typesafe.config.Config
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 case class EventHubConf(cfg: Config) {
-  val readersPerPartition: Int =
-    cfg.getInt("connection.readersPerPartition")
   val persist: Boolean = cfg.getBoolean("persist")
   val persistFreq: Int = cfg.getInt("persistFreq")
   val offsetPersistenceId: String = cfg.getString("offsetPersistenceId")
