@@ -82,11 +82,13 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                   logger.debug(
                     s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
                   import collection.JavaConverters._
+                  eventData.getSystemProperties.getPartitionKey
                   val ack =
                     Ack(pid,
                         EventPosition.fromOffset(
                           eventData.getSystemProperties.getOffset),
-                        eventData.getProperties.asScala)
+                        eventData.getProperties.asScala,
+                        eventData.getSystemProperties.getPartitionKey)
                   push(out, (data, AckableOffset(ack, from)))
                 case x => logger.error(s"I don't know how to handle success $x")
               }
