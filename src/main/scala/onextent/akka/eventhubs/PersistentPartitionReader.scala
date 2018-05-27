@@ -37,8 +37,8 @@ object PersistentPartitionReader extends LazyLogging {
   def supervise: SupervisorStrategy = {
     OneForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
       case e: EventHubException =>
-        logger.error(s"supervise restart due to $e", e)
-        Restart
+        logger.error(s"supervise EventHubException due to $e", e)
+        Resume // don't restart here... you are probably being killed for the greater good
       case e =>
         logger.error(s"supervise unnkown error ${e.getClass.getName} $e", e)
         Resume
