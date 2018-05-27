@@ -1,6 +1,6 @@
 package onextent.akka.eventhubs
 
-import akka.actor.SupervisorStrategy.Restart
+import akka.actor.SupervisorStrategy.{Restart, Resume}
 import akka.actor.{ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.routing.RoundRobinPool
@@ -37,11 +37,11 @@ object PersistentPartitionReader extends LazyLogging {
   def supervise: SupervisorStrategy = {
     OneForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
       case e: EventHubException =>
-        logger.error(s"supervise restart due to $e")
+        logger.error(s"supervise restart due to $e", e)
         Restart
       case e =>
-        logger.error(s"supervise restart due to $e")
-        Restart
+        logger.error(s"supervise unnkown error ${e.getClass.getName} $e", e)
+        Resume
     }
   }
 
