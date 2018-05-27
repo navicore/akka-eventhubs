@@ -31,7 +31,7 @@ abstract class AbstractPartitionReader(partitionId: Int,
     ehConsumerGroup,
     partitionId.toString,
     state,
-    1)
+    System.currentTimeMillis())
 
   def initReceiver: () => Unit = () => {
     receiver.setReceiveTimeout(Duration.ofSeconds(20))
