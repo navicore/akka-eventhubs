@@ -58,7 +58,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                                                        seed,
                                                        eventHubConf,
                                                        partitionId),
-      Connector.name + "-" + partitionId + eventHubConf.ehName + "-" + seed
+      Connector.name + "-" + partitionId + "-" + seed
     )
     c ! Start()
     c

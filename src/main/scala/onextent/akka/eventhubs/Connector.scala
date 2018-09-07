@@ -73,7 +73,7 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
             partitionId,
             seed,
             self, eventHubConf),
-          PersistentPartitionReader.nameBase + "-" + partitionId + "-" + eventHubConf.ehName + "-" + seed)
+          PersistentPartitionReader.nameBase + "-" + partitionId + "-" + seed)
       } else {
         logger.info(s"creating PartitionReader $partitionId")
         context.system.actorOf(
@@ -84,7 +84,7 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
             seed,
             self,
             eventHubConf),
-          PartitionReader.nameBase + partitionId + eventHubConf.ehName + "-" + seed)
+          PartitionReader.nameBase + partitionId + "-" + seed)
       }
 
     case event: Event =>

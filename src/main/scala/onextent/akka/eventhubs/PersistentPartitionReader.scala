@@ -1,6 +1,6 @@
 package onextent.akka.eventhubs
 
-import akka.actor.SupervisorStrategy.{Restart, Resume}
+import akka.actor.SupervisorStrategy.Resume
 import akka.actor.{ActorRef, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SaveSnapshotSuccess, SnapshotOffer}
 import akka.routing.RoundRobinPool
@@ -58,7 +58,7 @@ class PersistentPartitionReader(partitionId: Int,
   import eventHubConf._
 
   override def persistenceId: String =
-    offsetPersistenceId + "_" + partitionId + "_" + eventHubConf.ehName
+    offsetPersistenceId + "_" + partitionId
 
   private def takeSnapshot = () => {
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0) {

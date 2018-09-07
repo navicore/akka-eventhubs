@@ -13,20 +13,20 @@ case class EventHubConf(cfg: Config) {
   val snapshotInterval: Int = cfg.getInt("snapshotInterval")
   val ehRecieverBatchSize: Int = cfg.getInt("connection.receiverBatchSize")
   val ehConsumerGroup: String = cfg.getString("connection.consumerGroup")
-  val ehNamespace: String = cfg.getString("connection.namespace")
-  val ehName: String = cfg.getString("connection.name")
-  val ehAccessPolicy: String = cfg.getString("connection.accessPolicy")
-  val ehAccessKey: String = cfg.getString("connection.accessKey")
   val partitions: Int = cfg.getInt("connection.partitions")
-  val connStr: String = new ConnectionStringBuilder()
-    .setNamespaceName(ehNamespace)
-    .setEventHubName(ehName)
-    .setSasKeyName(ehAccessPolicy)
-    .setSasKey(ehAccessKey)
+
+
+  val connStr: String = if (cfg.hasPath("connection.connStr") &&  cfg.getString("connection.connStr").length > 0) {
+    cfg.getString("connection.connStr")
+  } else {
+    new ConnectionStringBuilder()
+    .setNamespaceName(cfg.getString("connection.namespace"))
+    .setEventHubName(cfg.getString("connection.name"))
+    .setSasKeyName(cfg.getString("connection.accessPolicy"))
+    .setSasKey(cfg.getString("connection.accessKey"))
     .toString
-//  if (ehRecieverBatchSize < persistFreq)
-//    throw new Exception(
-//      s"ehRecieverBatchSize $ehRecieverBatchSize is less than persistFreq $persistFreq")
+  }
+
   val defaultOffset: String = cfg.getString("connection.defaultOffset") // LATEST or EARLIEST
 
   def requestDuration: Duration = {
