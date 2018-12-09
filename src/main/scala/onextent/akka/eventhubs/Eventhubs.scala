@@ -1,6 +1,6 @@
 package onextent.akka.eventhubs
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.scaladsl.{MergeHub, RunnableGraph, Sink, Source}
 import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler}
@@ -96,7 +96,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               case _: java.util.concurrent.TimeoutException =>
                 logger.warn(
                   s"pull request timeout for partition $partitionId. restarting...")
-                connector ! PoisonPill
+                system.stop(connector) // don't wait for queue to clear
                 connector = initConnector()
                 onPull()
             }
