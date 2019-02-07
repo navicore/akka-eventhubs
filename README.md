@@ -139,6 +139,33 @@ eventhubs-1 {
 
 # SINK
 
+The sing requires a stream shape using a case class
+
+```
+case class EventhubsSinkData(payload: Array[Byte],
+                             keyOpt: Option[String] = None,
+                             props: Option[Map[String, String]] = None,
+                             ackable: Option[AckableOffset] = None,
+                             genericAck: Option[() => Unit] = None)
+```
+
+* `payload` is what you think it is.
+* `keyOpt` is the partition key.  If not set, the Sink will use a hash of the payload.
+* `props` is an optional string map that will add properties to the Eventhubs metadata for this item.
+* `ackable` is optional and will be committed when the payload is successfully sent.
+* `genericAck` is an optional anonymous funciton and will be called when the payload is successfully sent.
+
+
+```
+...
+...
+...
+      val format = Flow[(String, AckableOffset)].map((x: (String, AckableOffset)) =>
+        EventhubsSinkData(x._1.getBytes("UTF8"), None, None, Some(x._2))
+      )
+
+      src.via(flow).via(format).runWith(new EventhubsSink(EventHubConf(outConfig)))
+```
 
 ## OPS
 
