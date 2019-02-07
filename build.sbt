@@ -69,7 +69,6 @@ libraryDependencies ++=
   Seq(
 
     "com.microsoft.azure" % "azure-eventhubs" % "2.2.0",
-    //"com.microsoft.azure" % "azure-eventhubs" % "1.0.1",
 
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe" % "config" % "1.3.3",
