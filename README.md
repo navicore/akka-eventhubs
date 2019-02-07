@@ -4,7 +4,7 @@
 Akka Eventhubs
 ---
 
-Akka Streams Azure Eventhubs Source ~~and Sink~~
+Akka Streams Azure Eventhubs Source and Sink
 
 # USAGE
 
@@ -12,8 +12,10 @@ update your `build.sbt` dependencies with:
 
 ```scala
 // https://mvnrepository.com/artifact/tech.navicore/akkaeventhubs
-libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.9.3"
+libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.9.4"
 ```
+
+# SOURCE
 
 add to `application.conf`
 
@@ -34,26 +36,57 @@ eventhubs {
   }
 
 }
+
 eventhubs-1 {
 
-  persist = false
   snapshotInterval = 100
+  snapshotInterval = ${?SNAP_SHOT_INTERVAL}
+
+  persist = false
+  persist = ${?EVENTHUBS_1_PERSIST}
+
   persistFreq = 1
+  persistFreq = ${?EVENTHUBS_1_PERSIST_FREQ}
 
   offsetPersistenceId = "my_example_eventhubsOffset"
 
   connection {
-    endpoint = ${EVENTHUBS_1_ENDPOINT}
-    name = ${EVENTHUBS_1_NAME}
-    namespace = ${EVENTHUBS_1_NAMESPACE}
-    partitions = ${EVENTHUBS_1_PARTITION_COUNT}
-    accessPolicy = ${EVENTHUBS_1_ACCESS_POLICY}
-    accessKey = ${EVENTHUBS_1_ACCESS_KEY}
+
+    connStr = ${EVENTHUBS_1_CONNSTR}
+
+    defaultOffset = "LATEST"
+    defaultOffset = ${?EVENTHUBS_1_DEFAULT_OFFSET}
+
+    partitions = ${?EVENTHUBS_1_PARTITION_COUNT}
+
     consumerGroup = "$Default"
-    receiverTimeout = 30s
+    consumerGroup = ${?EVENTHUBS_1_CONSUMER_GROUP}
+
+    receiverTimeout = 120s
+    receiverTimeout = ${?EVENTHUBS_1_RECEIVER_TIMEOUT}
+
     receiverBatchSize = 1
+    receiverBatchSize = ${?EVENTHUBS_1_RECEIVER_BATCH_SIZE}
+
+    readersPerPartition = 1
+    readersPerPartition = ${?EVENTHUBS_1_READERS_PER_PARTITION}
   }
+
+  dispatcher {
+    type = Dispatcher
+    executor = "thread-pool-executor"
+    thread-pool-executor {
+      core-pool-size-min = 4
+      core-pool-size-factor = 2.0
+      core-pool-size-max = 8
+    }
+    throughput = 10
+    mailbox-capacity = -1
+    mailbox-type = ""
+  }
+
 }
+
 ```
 
 ack the the item once processed for a partition source:
@@ -104,6 +137,35 @@ eventhubs-1 {
 ...
 ```
 
+# SINK
+
+The sing requires a stream shape using a case class
+
+```
+case class EventhubsSinkData(payload: Array[Byte],
+                             keyOpt: Option[String] = None,
+                             props: Option[Map[String, String]] = None,
+                             ackable: Option[AckableOffset] = None,
+                             genericAck: Option[() => Unit] = None)
+```
+
+* `payload` is what you think it is.
+* `keyOpt` is the partition key.  If not set, the Sink will use a hash of the payload.
+* `props` is an optional string map that will add properties to the Eventhubs metadata for this item.
+* `ackable` is optional and will be committed when the payload is successfully sent.
+* `genericAck` is an optional anonymous funciton and will be called when the payload is successfully sent.
+
+
+```
+...
+...
+...
+      val format = Flow[(String, AckableOffset)].map((x: (String, AckableOffset)) =>
+        EventhubsSinkData(x._1.getBytes("UTF8"), None, None, Some(x._2))
+      )
+
+      src.via(flow).via(format).runWith(new EventhubsSink(EventHubConf(outConfig)))
+```
 
 ## OPS
 

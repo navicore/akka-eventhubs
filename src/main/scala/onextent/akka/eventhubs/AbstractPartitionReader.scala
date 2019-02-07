@@ -1,6 +1,7 @@
 package onextent.akka.eventhubs
 
 import java.time.Duration
+import java.util.concurrent.ScheduledExecutorService
 
 import akka.actor.Actor
 import com.microsoft.azure.eventhubs._
@@ -21,9 +22,8 @@ abstract class AbstractPartitionReader(partitionId: Int,
       EventPosition.fromStartOfStream()
     }
 
-  import java.util.concurrent.{ExecutorService, Executors}
-
-  val executorService: ExecutorService = Executors.newSingleThreadExecutor
+  import java.util.concurrent.Executors
+  val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
   val ehClient: EventHubClient =
     EventHubClient.createSync(connStr, executorService)
 
