@@ -15,11 +15,11 @@ parallelExecution in test := false
 
 version := "0.9.4"
 
-val scala212 = "2.12.6"
+val scala212 = "2.12.8"
 val scala211 = "2.11.12"
 
 crossScalaVersions := Seq(scala212, scala211)
-val akkaVersion = "2.5.11"
+val akkaVersion = "2.5.20"
 
 publishMavenStyle := true
 
@@ -67,7 +67,9 @@ publishTo := Some(
 
 libraryDependencies ++=
   Seq(
-    "com.microsoft.azure" % "azure-eventhubs" % "1.0.1",
+
+    "com.microsoft.azure" % "azure-eventhubs" % "2.2.0",
+    //"com.microsoft.azure" % "azure-eventhubs" % "1.0.1",
 
     "ch.qos.logback" % "logback-classic" % "1.1.7",
     "com.typesafe" % "config" % "1.3.3",
