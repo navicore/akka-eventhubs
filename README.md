@@ -12,7 +12,7 @@ update your `build.sbt` dependencies with:
 
 ```scala
 // https://mvnrepository.com/artifact/tech.navicore/akkaeventhubs
-libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.9.4"
+libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "0.9.5"
 ```
 
 # SOURCE
@@ -37,7 +37,7 @@ eventhubs {
 
 }
 
-eventhubs-1 {
+eventhubs-in {
 
   snapshotInterval = 100
   snapshotInterval = ${?SNAP_SHOT_INTERVAL}
@@ -92,7 +92,7 @@ eventhubs-1 {
 ack the the item once processed for a partition source:
 
 ```scala
-    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-in")
 
     val source1 = createPartitionSource(0, cfg)
 
@@ -113,7 +113,7 @@ ack the the item once processed after merging all the partition sources:
 
     val toConsumer = createToConsumer(consumer)
 
-    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-1")
+    val cfg: Config = ConfigFactory.load().getConfig("eventhubs-in")
 
     for (pid <- 0 until  EventHubConf(cfg).partitions) {
 
@@ -130,7 +130,7 @@ ack the the item once processed after merging all the partition sources:
 change `applicagtion.conf` and configure [Actor Persistence]
 
 ```
-eventhubs-1 {
+eventhubs-in {
   persist = true
 ...
 ...
@@ -157,6 +157,7 @@ case class EventhubsSinkData(payload: Array[Byte],
 
 
 ```
+    val outConfig: Config = ConfigFactory.load().getConfig("eventhubs-out")
 ...
 ...
 ...

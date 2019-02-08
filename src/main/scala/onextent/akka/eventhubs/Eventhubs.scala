@@ -87,7 +87,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                     Ack(pid,
                         EventPosition.fromOffset(
                           eventData.getSystemProperties.getOffset),
-                        eventData.getProperties.asScala,
+                        eventData.getProperties.asScala.map(x => (x._1, x._2.toString)),
                         eventData.getSystemProperties.getPartitionKey)
                   push(out, (data, AckableOffset(ack, from)))
                 case x => logger.error(s"I don't know how to handle success $x")
