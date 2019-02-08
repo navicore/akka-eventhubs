@@ -54,22 +54,18 @@ eventhubs-in {
 
     connStr = ${EVENTHUBS_1_CONNSTR}
 
-    defaultOffset = "LATEST"
-    defaultOffset = ${?EVENTHUBS_1_DEFAULT_OFFSET}
+    partitions = ${EVENTHUBS_1_PARTITION_COUNT}
 
-    partitions = ${?EVENTHUBS_1_PARTITION_COUNT}
+    defaultOffset = "LATEST"
 
     consumerGroup = "$Default"
-    consumerGroup = ${?EVENTHUBS_1_CONSUMER_GROUP}
 
     receiverTimeout = 120s
-    receiverTimeout = ${?EVENTHUBS_1_RECEIVER_TIMEOUT}
 
     receiverBatchSize = 1
-    receiverBatchSize = ${?EVENTHUBS_1_RECEIVER_BATCH_SIZE}
 
     readersPerPartition = 1
-    readersPerPartition = ${?EVENTHUBS_1_READERS_PER_PARTITION}
+  
   }
 
   dispatcher {
