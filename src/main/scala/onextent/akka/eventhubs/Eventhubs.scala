@@ -11,7 +11,7 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, TimeoutException}
 
 /**
   * helper functions to create a multi partition consumer
@@ -93,9 +93,15 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 case x => logger.error(s"I don't know how to handle success $x")
               }
             } catch {
-              case _: java.util.concurrent.TimeoutException =>
+              case _: TimeoutException =>
                 logger.warn(
                   s"pull request timeout for partition $partitionId. restarting...")
+                system.stop(connector) // don't wait for queue to clear
+                connector = initConnector()
+                onPull()
+              case e =>
+                logger.error(
+                  s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
                 system.stop(connector) // don't wait for queue to clear
                 connector = initConnector()
                 onPull()
