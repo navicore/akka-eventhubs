@@ -63,6 +63,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
             val f: Future[Void] = ehClient.send(payloadBytes, key).toScala.map(x => {
               element.ackable.fold()(a => a.ack())
               element.genericAck.fold()(a => a())
+              logger.debug(s"eventhubs sink successfully sent key $key")
               x
             })
 
