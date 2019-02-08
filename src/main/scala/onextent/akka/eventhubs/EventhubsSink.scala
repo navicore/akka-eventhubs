@@ -1,5 +1,6 @@
 package onextent.akka.eventhubs
 
+import scala.concurrent.duration._
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,7 +31,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
 
   val executorService: ScheduledExecutorService =
     Executors.newSingleThreadScheduledExecutor()
-  val ehClient: EventHubClient =
+  var ehClient: EventHubClient =
     EventHubClient.createSync(eventhubsConfig.connStr, executorService)
 
   val in: Inlet[EventhubsSinkData] = Inlet.create("EventhubsSink.in")
@@ -65,14 +66,31 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
               x
             })
 
-            import scala.concurrent.duration._
-            Await.ready(f, 10.seconds)
+            try {
+              Await.ready(f, 10.seconds)
+            } catch {
+              case to: TimeoutException =>
+                logger.error(s"time out: ${to.getMessage}")
+                reConnect()
+              case i: InterruptedException =>
+                logger.error(s"interrupt: ${i.getMessage}")
+                reConnect()
+              case e =>
+                logger.error(s"unexpected: ${e.getMessage}", e)
+                reConnect()
+            }
             pull(in)
 
           }
 
         }
       )
+
+      def reConnect(): Unit = {
+        logger.warn("reconnecting sync")
+        ehClient.closeSync()
+        ehClient = EventHubClient.createSync(eventhubsConfig.connStr, executorService)
+      }
 
       override def preStart(): Unit = {
         logger.info(s"starting eventhubs sink")
