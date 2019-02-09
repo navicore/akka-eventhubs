@@ -95,13 +95,13 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 case x => logger.error(s"I don't know how to handle success $x")
               }
             } catch {
-              case _: TimeoutException =>
-                logger.warn(
-                  s"pull request timeout for partition $partitionId. restarting...")
-                system.stop(connector) // don't wait for queue to clear
-                System.exit(0)
+              case e: TimeoutException =>
+                //logger.warn(s"pull request timeout for partition $partitionId. restarting...", e)
+                logger.warn(s"pull request timeout for partition $partitionId. retrying...", e)
+                //system.stop(connector) // don't wait for queue to clear
+                //System.exit(0)
                 //connector = initConnector()
-                //onPull()
+                onPull()
               case e =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
