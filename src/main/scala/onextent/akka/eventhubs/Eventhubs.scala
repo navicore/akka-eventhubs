@@ -15,7 +15,8 @@ import onextent.akka.eventhubs.Connector._
 
 import scala.concurrent.{Await, Future, TimeoutException}
 
-class AkkaEventhubsException(message: String, cause: Throwable) extends IOException
+class AkkaEventhubsException(message: String, cause: Throwable)
+    extends IOException(message, cause)
 
 /**
   * helper functions to create a multi partition consumer
@@ -88,30 +89,36 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                   import collection.JavaConverters._
                   eventData.getSystemProperties.getPartitionKey
                   val ack =
-                    Ack(pid,
-                        EventPosition.fromOffset(
-                          eventData.getSystemProperties.getOffset),
-                        eventData.getProperties.asScala.map(x => (x._1, x._2.toString)),
-                        eventData.getSystemProperties.getPartitionKey)
+                    Ack(
+                      pid,
+                      EventPosition.fromOffset(
+                        eventData.getSystemProperties.getOffset),
+                      eventData.getProperties.asScala.map(x =>
+                        (x._1, x._2.toString)),
+                      eventData.getSystemProperties.getPartitionKey
+                    )
                   push(out, (data, AckableOffset(ack, from)))
                 case x => logger.error(s"I don't know how to handle success $x")
               }
             } catch {
               case e: TimeoutException =>
-                logger.warn(s"pull request timeout for partition $partitionId. restarting...", e)
+                logger.warn(
+                  s"pull request timeout for partition $partitionId. restarting...",
+                  e)
                 //system.stop(connector) // don't wait for queue to clear
                 //System.exit(0)
                 throw new AkkaEventhubsException("timeout error", e)
-                //connector = initConnector()
-                //onPull()
+              //connector = initConnector()
+              //onPull()
               case e =>
                 logger.error(
-                  s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
+                  s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
+                  e)
                 //system.stop(connector) // don't wait for queue to clear
                 //System.exit(0)
                 throw new AkkaEventhubsException("connector error", e)
-                //connector = initConnector()
-                //onPull()
+              //connector = initConnector()
+              //onPull()
             }
           }
         }
