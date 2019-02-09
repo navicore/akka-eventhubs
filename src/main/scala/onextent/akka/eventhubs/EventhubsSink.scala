@@ -1,16 +1,12 @@
 package onextent.akka.eventhubs
 
-import scala.concurrent.duration._
 import java.util.concurrent.{Executors, ScheduledExecutorService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import akka.stream._
 import akka.stream.stage._
-import com.microsoft.azure.eventhubs.{EventData, EventHubClient}
+import com.microsoft.azure.eventhubs.{EventData, EventHubClient, EventHubException}
 import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector.AckableOffset
-
-import scala.concurrent.{Future, _}
 
 case class EventhubsSinkData(payload: Array[Byte],
                              keyOpt: Option[String] = None,
@@ -59,22 +55,14 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
             element.props.fold()(p =>
               p.keys.foreach(k => payloadBytes.getProperties.put(k, p(k))))
 
-            import scala.compat.java8.FutureConverters._
-            val f: Future[Void] = ehClient.send(payloadBytes, key).toScala.map(x => {
+            try {
+              ehClient.sendSync(payloadBytes, key)
               element.ackable.fold()(a => a.ack())
               element.genericAck.fold()(a => a())
               logger.debug(s"eventhubs sink successfully sent key $key")
-              x
-            })
-
-            try {
-              Await.ready(f, 10.seconds)
             } catch {
-              case to: TimeoutException =>
-                logger.error(s"time out: ${to.getMessage}")
-                reConnect()
-              case i: InterruptedException =>
-                logger.error(s"interrupt: ${i.getMessage}")
+              case ee: EventHubException =>
+                logger.error(s"eventhub exception: ${ee.getMessage}", ee)
                 reConnect()
               case e =>
                 logger.error(s"unexpected: ${e.getMessage}", e)
@@ -90,7 +78,8 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
       def reConnect(): Unit = {
         logger.warn("reconnecting sync")
         ehClient.closeSync()
-        ehClient = EventHubClient.createSync(eventhubsConfig.connStr, executorService)
+        ehClient =
+          EventHubClient.createSync(eventhubsConfig.connStr, executorService)
       }
 
       override def preStart(): Unit = {
