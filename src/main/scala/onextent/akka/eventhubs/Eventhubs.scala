@@ -76,9 +76,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
             try {
               logger.debug("Pull")
               val f = connector ask Pull()
-              //Await.result(f, eventHubConf.requestDuration) match {
-              import scala.concurrent.duration._
-              Await.result(f, 120.seconds) match {
+              Await.result(f, eventHubConf.requestDuration) match {
                 case Event(from, pid, eventData) =>
                   val data = new String(eventData.getBytes)
                   logger.debug(
@@ -103,10 +101,9 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               case e =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
-                //system.stop(connector) // don't wait for queue to clear
-                System.exit(0)
-                //connector = initConnector()
-                //onPull()
+                system.stop(connector) // don't wait for queue to clear
+                connector = initConnector()
+                onPull()
             }
           }
         }
