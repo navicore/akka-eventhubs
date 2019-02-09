@@ -76,7 +76,9 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
             try {
               logger.debug("Pull")
               val f = connector ask Pull()
-              Await.result(f, eventHubConf.requestDuration) match {
+              //Await.result(f, eventHubConf.requestDuration) match {
+              import scala.concurrent.duration._
+              Await.result(f, 120.seconds) match {
                 case Event(from, pid, eventData) =>
                   val data = new String(eventData.getBytes)
                   logger.debug(
