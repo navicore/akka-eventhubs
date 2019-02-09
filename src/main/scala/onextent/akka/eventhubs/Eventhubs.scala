@@ -97,14 +97,16 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 logger.warn(
                   s"pull request timeout for partition $partitionId. restarting...")
                 system.stop(connector) // don't wait for queue to clear
-                connector = initConnector()
-                onPull()
+                System.exit(0)
+                //connector = initConnector()
+                //onPull()
               case e =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
                 system.stop(connector) // don't wait for queue to clear
-                connector = initConnector()
-                onPull()
+                System.exit(0)
+                //connector = initConnector()
+                //onPull()
             }
           }
         }
