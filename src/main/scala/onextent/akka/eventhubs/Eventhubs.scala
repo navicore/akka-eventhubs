@@ -1,5 +1,7 @@
 package onextent.akka.eventhubs
 
+import java.io.IOException
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.scaladsl.{MergeHub, RunnableGraph, Sink, Source}
@@ -12,6 +14,8 @@ import com.typesafe.scalalogging.LazyLogging
 import onextent.akka.eventhubs.Connector._
 
 import scala.concurrent.{Await, Future, TimeoutException}
+
+class AkkaEventhubsException(message: String, cause: Throwable) extends IOException
 
 /**
   * helper functions to create a multi partition consumer
@@ -97,7 +101,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 logger.warn(s"pull request timeout for partition $partitionId. restarting...", e)
                 //system.stop(connector) // don't wait for queue to clear
                 //System.exit(0)
-                throw new RuntimeException("connector error", e)
+                throw new AkkaEventhubsException("timeout error", e)
                 //connector = initConnector()
                 //onPull()
               case e =>
@@ -105,7 +109,7 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...", e)
                 //system.stop(connector) // don't wait for queue to clear
                 //System.exit(0)
-                throw new RuntimeException("connector error", e)
+                throw new AkkaEventhubsException("connector error", e)
                 //connector = initConnector()
                 //onPull()
             }
