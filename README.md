@@ -158,7 +158,7 @@ case class EventhubsSinkData(payload: Array[Byte],
         EventhubsSinkData(x._1.getBytes("UTF8"), None, None, Some(x._2))
       )
 
-      src.via(flow).via(format).runWith(new EventhubsSink(EventHubConf(outConfig)))
+      src.via(<SOME_PROCESSING_FLOW>).via(format).runWith(new EventhubsSink(EventHubConf(outConfig)))
 ```
 
 ## OPS
