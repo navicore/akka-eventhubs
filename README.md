@@ -146,7 +146,7 @@ case class EventhubsSinkData(payload: Array[Byte],
 * `keyOpt` is the partition key.  If not set, the Sink will use a hash of the payload.
 * `props` is an optional string map that will add properties to the Eventhubs metadata for this item.
 * `ackable` is optional and will be committed when the payload is successfully sent.
-* `genericAck` is an optional anonymous funciton and will be called when the payload is successfully sent.
+* `genericAck` is an optional function and will be called when the payload is successfully sent.
 
 
 ```
