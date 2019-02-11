@@ -40,13 +40,10 @@ eventhubs {
 eventhubs-in {
 
   snapshotInterval = 100
-  snapshotInterval = ${?SNAP_SHOT_INTERVAL}
 
   persist = false
-  persist = ${?EVENTHUBS_1_PERSIST}
 
   persistFreq = 1
-  persistFreq = ${?EVENTHUBS_1_PERSIST_FREQ}
 
   offsetPersistenceId = "my_example_eventhubsOffset"
 
