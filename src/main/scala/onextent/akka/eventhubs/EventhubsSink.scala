@@ -21,7 +21,7 @@ case class EventhubsSinkData(payload: Array[Byte],
   If key is not set, a hash will be calculated - it is best to set the key.
 
  */
-class EventhubsSink(eventhubsConfig: EventHubConf)
+class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
     extends GraphStage[SinkShape[EventhubsSinkData]]
     with LazyLogging {
 
@@ -36,13 +36,15 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
 
-    logger.info(s"eventhubs create logic")
+    logger.info(s"eventhub $partitionId create logic")
 
     new GraphStageLogic(shape()) {
 
       setHandler(
         in,
         new AbstractInHandler {
+
+          var count: Long = 0 // experimental counter for logging
 
           override def onPush(): Unit = {
 
@@ -59,13 +61,14 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
               ehClient.sendSync(payloadBytes, key)
               element.ackable.fold()(a => a.ack())
               element.genericAck.fold()(a => a())
-              logger.debug(s"eventhubs sink successfully sent key $key")
+              logger.debug(s"eventhubs sink $partitionId successfully sent key $key, count = $count")
+              count += 1
             } catch {
               case ee: EventHubException =>
-                logger.error(s"eventhub exception: ${ee.getMessage}", ee)
+                logger.error(s"eventhub $partitionId exception: ${ee.getMessage}", ee)
                 reConnect()
               case e: Throwable =>
-                logger.error(s"unexpected: ${e.getMessage}", e)
+                logger.error(s"eventhub $partitionId unexpected: ${e.getMessage}", e)
                 reConnect()
             }
             pull(in)

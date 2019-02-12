@@ -77,6 +77,9 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
       setHandler(
         out,
         new OutHandler {
+
+          var count: Long = 0 // experimental counter for logging
+
           override def onPull(): Unit = {
             try {
               logger.debug("Pull")
@@ -84,20 +87,19 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               Await.result(f, eventHubConf.requestDuration) match {
                 case Event(from, pid, eventData) =>
                   val data = new String(eventData.getBytes)
-                  logger.debug(
-                    s"key ${eventData.getSystemProperties.getPartitionKey} from partition $partitionId")
+                  val key = eventData.getSystemProperties.getPartitionKey
                   import collection.JavaConverters._
                   eventData.getSystemProperties.getPartitionKey
                   val ack =
                     Ack(
                       pid,
-                      EventPosition.fromOffset(
-                        eventData.getSystemProperties.getOffset),
-                      eventData.getProperties.asScala.map(x =>
-                        (x._1, x._2.toString)),
-                      eventData.getSystemProperties.getPartitionKey
+                      EventPosition.fromOffset(eventData.getSystemProperties.getOffset),
+                      eventData.getProperties.asScala.map(x => (x._1, x._2.toString)),
+                      key
                     )
                   push(out, (data, AckableOffset(ack, from)))
+                  count += 1
+                  logger.debug(s"key $key read from partition $partitionId, count = $count")
                 case x => logger.error(s"I don't know how to handle success $x")
               }
             } catch {
