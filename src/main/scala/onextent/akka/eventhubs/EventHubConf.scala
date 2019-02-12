@@ -14,6 +14,11 @@ case class EventHubConf(cfg: Config) {
   val ehRecieverBatchSize: Int = cfg.getInt("connection.receiverBatchSize")
   val ehConsumerGroup: String = cfg.getString("connection.consumerGroup")
   val partitions: Int = cfg.getInt("connection.partitions")
+  val threads: Int = if (cfg.hasPath("connection.threads")) {
+    cfg.getInt("connection.threads")
+  } else {
+    2
+  }
 
 
   val connStr: String = if (cfg.hasPath("connection.connStr") &&  cfg.getString("connection.connStr").length > 0) {

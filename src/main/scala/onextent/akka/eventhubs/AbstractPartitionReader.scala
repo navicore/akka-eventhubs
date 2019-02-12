@@ -23,7 +23,7 @@ abstract class AbstractPartitionReader(partitionId: Int,
     }
 
   import java.util.concurrent.Executors
-  val executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+  val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(eventHubConf.threads)
   val ehClient: EventHubClient =
     EventHubClient.createSync(connStr, executorService)
 

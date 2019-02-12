@@ -25,8 +25,8 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
     extends GraphStage[SinkShape[EventhubsSinkData]]
     with LazyLogging {
 
-  val executorService: ScheduledExecutorService =
-    Executors.newSingleThreadScheduledExecutor()
+  val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(eventhubsConfig.threads)
+
   var ehClient: EventHubClient =
     EventHubClient.createSync(eventhubsConfig.connStr, executorService)
 
