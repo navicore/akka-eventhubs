@@ -48,7 +48,9 @@ abstract class AbstractPartitionReader(partitionId: Int,
           itero match {
             case Some(iter) if iter.hasNext =>
               import scala.collection.JavaConverters._
-              iter.asScala.toList
+              val r: List[EventData] = iter.asScala.toList
+              logger.debug(s"read ${r.length} messages with read batch size of $ehRecieverBatchSize")
+              r
             case _ => List()
           }
         case _ => List()

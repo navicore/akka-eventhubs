@@ -64,7 +64,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf)
               case ee: EventHubException =>
                 logger.error(s"eventhub exception: ${ee.getMessage}", ee)
                 reConnect()
-              case e =>
+              case e: Throwable =>
                 logger.error(s"unexpected: ${e.getMessage}", e)
                 reConnect()
             }

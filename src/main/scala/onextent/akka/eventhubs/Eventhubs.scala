@@ -105,20 +105,12 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 logger.warn(
                   s"pull request timeout for partition $partitionId. restarting...",
                   e)
-                //system.stop(connector) // don't wait for queue to clear
-                //System.exit(0)
                 throw new AkkaEventhubsException("timeout error", e)
-              //connector = initConnector()
-              //onPull()
-              case e =>
+              case e: Throwable =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
                   e)
-                //system.stop(connector) // don't wait for queue to clear
-                //System.exit(0)
                 throw new AkkaEventhubsException("connector error", e)
-              //connector = initConnector()
-              //onPull()
             }
           }
         }
