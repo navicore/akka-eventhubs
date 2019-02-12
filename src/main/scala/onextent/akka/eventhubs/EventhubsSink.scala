@@ -61,7 +61,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
               ehClient.sendSync(payloadBytes, key)
               element.ackable.fold()(a => a.ack())
               element.genericAck.fold()(a => a())
-              logger.debug(s"eventhubs sink $partitionId successfully sent key $key, count = $count")
+              logger.debug(s"eventhubs sink partition $partitionId successfully sent key $key, count = $count")
               count += 1
             } catch {
               case ee: EventHubException =>
