@@ -52,6 +52,7 @@ class PartitionReader(partitionId: Int, seed: Long, connector: ActorRef, eventHu
           connector ! event
         })
       }
+
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
   }
