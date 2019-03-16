@@ -7,8 +7,10 @@ import onextent.akka.eventhubs.Connector.Ack
 
 object PartitionReader {
 
-  private def props(partitionId: Int, seed: Long, source: ActorRef, eventHubConf: EventHubConf)(
-      implicit timeout: Timeout) =
+  private def props(partitionId: Int,
+                    seed: Long,
+                    source: ActorRef,
+                    eventHubConf: EventHubConf)(implicit timeout: Timeout) =
     Props(new PartitionReader(partitionId, seed, source, eventHubConf))
   val nameBase: String = s"PartitionReader"
   def propsWithDispatcherAndRoundRobinRouter(
@@ -24,7 +26,10 @@ object PartitionReader {
   }
 }
 
-class PartitionReader(partitionId: Int, seed: Long, connector: ActorRef, eventHubConf: EventHubConf)
+class PartitionReader(partitionId: Int,
+                      seed: Long,
+                      connector: ActorRef,
+                      eventHubConf: EventHubConf)
     extends AbstractPartitionReader(partitionId, eventHubConf) {
 
   logger.info("creating PartitionReader")
@@ -32,10 +37,15 @@ class PartitionReader(partitionId: Int, seed: Long, connector: ActorRef, eventHu
   var outstandingAcks = 0
   // kick off a wheel at init
   initReceiver()
-  read().foreach(event => {
-    outstandingAcks += 1
-    connector ! event
-  })
+  try {
+    read().foreach(event => {
+      outstandingAcks += 1
+      connector ! event
+    })
+  } catch {
+    case e: Throwable =>
+      connector ! e
+  }
 
   def receive: Receive = receiveCmd
 
@@ -47,15 +57,19 @@ class PartitionReader(partitionId: Int, seed: Long, connector: ActorRef, eventHu
       outstandingAcks -= 1
       // kick off a wheel on every ack
       if (outstandingAcks <= 1) {
-        read().foreach(event => {
-          outstandingAcks += 1
-          connector ! event
-        })
+        try {
+          read().foreach(event => {
+            outstandingAcks += 1
+            connector ! event
+          })
+        } catch {
+          case e: Throwable =>
+            connector ! e
+        }
       }
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
   }
-
 
 }

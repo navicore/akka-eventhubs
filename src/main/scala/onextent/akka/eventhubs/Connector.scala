@@ -1,7 +1,7 @@
 package onextent.akka.eventhubs
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorRef, AllForOneStrategy, PostRestartException, Props, SupervisorStrategy}
+import akka.actor._
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.microsoft.azure.eventhubs.{EventData, EventPosition}
@@ -58,8 +58,11 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
   logger.info(s"creating ConnectorActor $partitionId")
 
 
-  var state: (Queue[Event], Queue[ActorRef]) =
-    (Queue[Event](), Queue[ActorRef]())
+//  var state: (Queue[Event], Queue[ActorRef]) =
+//    (Queue[Event](), Queue[ActorRef]())
+
+  var state: (Queue[Any], Queue[ActorRef]) =
+    (Queue[Any](), Queue[ActorRef]())
 
   override def receive: Receive = {
 
@@ -87,6 +90,18 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
           PartitionReader.nameBase + partitionId + "-" + seed)
       }
 
+    case error: Throwable =>
+      logger.error(s"error ${error.getMessage}")
+      val (queue, requests) = state
+      state = (queue :+ error, requests)
+      while (state._1.nonEmpty && state._2.nonEmpty) {
+        val (queue, requests) = state
+        val (next, newQueue) = queue.dequeue
+        val (requestor, newRequests) = requests.dequeue
+        requestor ! next
+        state = (newQueue, newRequests)
+      }
+
     case event: Event =>
       // add to queue
       logger.debug(s"event from ${event.partitionId}")
@@ -96,8 +111,6 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
         val (queue, requests) = state
         val (next, newQueue) = queue.dequeue
         val (requestor, newRequests) = requests.dequeue
-        logger.debug(
-          s"sending to waiting requestor from ${next.partitionId}. r q sz: ${requests.size}")
         requestor ! next
         state = (newQueue, newRequests)
       }
@@ -111,8 +124,6 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
       } else {
         val (next, newQueue) = queue.dequeue
         state = (newQueue, requests)
-        logger.debug(
-          s"sending to requestor from ${next.partitionId} q sz: ${queue.size}")
         sender() ! next
       }
 

@@ -74,6 +74,8 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
 
+      //val me = this
+
       setHandler(
         out,
         new OutHandler {
@@ -85,6 +87,10 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               logger.debug("Pull")
               val f = connector ask Pull()
               Await.result(f, eventHubConf.requestDuration) match {
+                case e: Throwable =>
+                  logger.error(s"pull request error for partition $partitionId. aborting...", e)
+                  completeStage()
+
                 case Event(from, pid, eventData) =>
                   val data = new String(eventData.getBytes)
                   val key = eventData.getSystemProperties.getPartitionKey
@@ -105,14 +111,14 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
             } catch {
               case e: TimeoutException =>
                 logger.warn(
-                  s"pull request timeout for partition $partitionId. restarting...",
+                  s"pull request timeout for partition $partitionId. aborting...",
                   e)
-                throw new AkkaEventhubsException("timeout error", e)
+                completeStage()
               case e: Throwable =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
                   e)
-                throw new AkkaEventhubsException("connector error", e)
+                completeStage()
             }
           }
         }
