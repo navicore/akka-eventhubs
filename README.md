@@ -12,7 +12,7 @@ update your `build.sbt` dependencies with:
 
 ```scala
 // https://mvnrepository.com/artifact/tech.navicore/akkaeventhubs
-libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "1.0.1"
+libraryDependencies += "tech.navicore" %% "akkaeventhubs" % "1.2.0"
 ```
 
 # SOURCE
