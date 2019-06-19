@@ -92,6 +92,8 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
 
     case error: Throwable =>
       logger.error(s"error ${error.getMessage}")
+      throw error
+      /*
       val (queue, requests) = state
       state = (queue :+ error, requests)
       while (state._1.nonEmpty && state._2.nonEmpty) {
@@ -101,6 +103,7 @@ class Connector(eventHubConf: EventHubConf, partitionId: Int, seed: Long) extend
         requestor ! next
         state = (newQueue, newRequests)
       }
+      */
 
     case event: Event =>
       // add to queue

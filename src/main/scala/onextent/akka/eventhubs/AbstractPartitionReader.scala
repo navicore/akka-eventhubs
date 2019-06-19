@@ -23,7 +23,8 @@ abstract class AbstractPartitionReader(partitionId: Int,
     }
 
   import java.util.concurrent.Executors
-  val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(eventHubConf.threads)
+  val executorService: ScheduledExecutorService =
+    Executors.newScheduledThreadPool(eventHubConf.threads)
   val ehClient: EventHubClient =
     EventHubClient.createSync(connStr, executorService)
 
@@ -36,7 +37,6 @@ abstract class AbstractPartitionReader(partitionId: Int,
   def initReceiver: () => Unit = () => {
     receiver.setReceiveTimeout(Duration.ofSeconds(20))
   }
-
   // wheel to call from init
   def read(): List[Event] = {
     var result: List[EventData] = List()
@@ -49,7 +49,8 @@ abstract class AbstractPartitionReader(partitionId: Int,
             case Some(iter) if iter.hasNext =>
               import scala.collection.JavaConverters._
               val r: List[EventData] = iter.asScala.toList
-              logger.debug(s"read ${r.length} messages with read batch size of $ehRecieverBatchSize")
+              logger.debug(
+                s"read ${r.length} messages with read batch size of $ehRecieverBatchSize")
               r
             case _ => List()
           }

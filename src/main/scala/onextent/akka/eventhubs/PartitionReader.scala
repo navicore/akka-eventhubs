@@ -44,6 +44,7 @@ class PartitionReader(partitionId: Int,
     })
   } catch {
     case e: Throwable =>
+      logger.warn("can not read: $e", e)
       connector ! e
   }
 

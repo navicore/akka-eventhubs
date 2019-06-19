@@ -110,15 +110,17 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               }
             } catch {
               case e: TimeoutException =>
-                logger.warn(
+                logger.error(
                   s"pull request timeout for partition $partitionId. aborting...",
                   e)
                 completeStage()
+                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") System.exit(1)
               case e: Throwable =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
                   e)
                 completeStage()
+                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") System.exit(1)
             }
           }
         }
