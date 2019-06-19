@@ -114,13 +114,19 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                   s"pull request timeout for partition $partitionId. aborting...",
                   e)
                 completeStage()
-                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") System.exit(1)
+                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") {
+                  logger.error("FATAL ERROR 1 - ABORT", e)
+                  System.exit(1)
+                }
               case e: Throwable =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
                   e)
                 completeStage()
-                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") System.exit(1)
+                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") {
+                  logger.error("FATAL ERROR 2 - ABORT", e)
+                  System.exit(1)
+                }
             }
           }
         }
