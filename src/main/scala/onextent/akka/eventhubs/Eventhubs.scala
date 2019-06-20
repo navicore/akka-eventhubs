@@ -21,7 +21,7 @@ class AkkaEventhubsException(message: String, cause: Throwable)
 /**
   * helper functions to create a multi partition consumer
   */
-object Eventhubs {
+object Eventhubs extends LazyLogging {
 
   def createPartitionSource(partitionId: Int, cfg: Config)(
       implicit s: ActorSystem,
@@ -38,6 +38,13 @@ object Eventhubs {
         .source[(String, AckableOffset)](perProducerBufferSize = 16)
         .to(consumer)
     runnableGraph.run()
+  }
+
+  def abort(e: Throwable): Unit = {
+    logger.error(s"FATAL ERROR - ABORT: $e", e)
+    if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") {
+      System.exit(1)
+    }
   }
 
 }
@@ -89,7 +96,8 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
               Await.result(f, eventHubConf.requestDuration) match {
                 case e: Throwable =>
                   logger.error(s"pull request error for partition $partitionId. aborting...", e)
-                  completeStage()
+                  //completeStage()
+                  throw e
 
                 case Event(from, pid, eventData) =>
                   val data = new String(eventData.getBytes)
@@ -113,20 +121,14 @@ class Eventhubs(eventHubConf: EventHubConf, partitionId: Int)(
                 logger.error(
                   s"pull request timeout for partition $partitionId. aborting...",
                   e)
+                Eventhubs.abort(e)
                 completeStage()
-                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") {
-                  logger.error("FATAL ERROR 1 - ABORT", e)
-                  System.exit(1)
-                }
               case e: Throwable =>
                 logger.error(
                   s"pull request exception '${e.getMessage}' for partition $partitionId. restarting...",
                   e)
+                Eventhubs.abort(e)
                 completeStage()
-                if (sys.env.getOrElse("AKKA_EH_DIE_ON_ERROR", "") == "YES") {
-                  logger.error("FATAL ERROR 2 - ABORT", e)
-                  System.exit(1)
-                }
             }
           }
         }

@@ -39,12 +39,17 @@ object Connector extends LazyLogging {
     AllForOneStrategy(maxNrOfRetries = -1, withinTimeRange = Duration.Inf) {
       case e: PostRestartException =>
         logger.error(s"post restart supervise restart due to $e")
+        Eventhubs.abort(e)
         Stop
       case e: Exception =>
         logger.error(s"supervise restart due to $e")
         Restart
+        logger.error(s"supervise escalate due to $e")
+        Eventhubs.abort(e)
+        Escalate
       case e  =>
         logger.error(s"supervise escalate due to $e")
+        Eventhubs.abort(e)
         Escalate
     }
   }
