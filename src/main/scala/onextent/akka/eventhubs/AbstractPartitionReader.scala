@@ -66,8 +66,9 @@ abstract class AbstractPartitionReader(partitionId: Int,
             case _ => List()
           }
         case Success(_) =>
-          logger.warn(s"read failed - null result")
-          throw new java.io.IOException("read failed - null result")
+          logger.debug(s"read failed - null result, non-fatal")
+          //throw new java.io.IOException("read failed - null result")
+          List()
         case Failure(e) =>
           logger.error(s"read failed due to $e", e)
           throw e
