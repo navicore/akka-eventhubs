@@ -28,7 +28,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
   val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(eventhubsConfig.threads)
 
   var ehClient: EventHubClient =
-    EventHubClient.createSync(eventhubsConfig.connStr, executorService)
+    EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
 
   val in: Inlet[EventhubsSinkData] = Inlet.create("EventhubsSink.in")
 
@@ -90,7 +90,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
         logger.warn("reconnecting sync")
         ehClient.closeSync()
         ehClient =
-          EventHubClient.createSync(eventhubsConfig.connStr, executorService)
+          EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
       }
 
       override def preStart(): Unit = {
