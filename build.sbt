@@ -36,7 +36,7 @@ inThisBuild(List(
 libraryDependencies ++=
   Seq(
 
-    "com.microsoft.azure" % "azure-eventhubs" % "2.3.2",
+    "com.microsoft.azure" % "azure-eventhubs" % "3.0.0",
 
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe" % "config" % "1.3.4",
