@@ -57,7 +57,7 @@ class PartitionReader(partitionId: Int,
       state = ack.offset
       outstandingAcks -= 1
       // kick off a wheel on every ack
-      if (outstandingAcks <= 1) {
+      if (outstandingAcks <= eventHubConf.ehRecieverBatchSize + 1) {
         try {
           read().foreach(event => {
             outstandingAcks += 1
@@ -67,7 +67,8 @@ class PartitionReader(partitionId: Int,
           case e: Throwable =>
             connector ! e
         }
-      }
+      } else
+        logger.debug(s"skipping read due to $outstandingAcks outstanding acks.")
 
     case x => logger.error(s"I don't know how to handle ${x.getClass.getName}")
 
