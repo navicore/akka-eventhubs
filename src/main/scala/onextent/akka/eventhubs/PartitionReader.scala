@@ -38,9 +38,13 @@ class PartitionReader(partitionId: Int,
   // kick off a wheel at init
   initReceiver()
   try {
-    logger.debug(s"partition $partitionId priming pump")
     read().foreach(event => {
       logger.debug(s"partition $partitionId prime pump event")
+      outstandingAcks += 1
+      connector ! event
+    })
+    read().foreach(event => {
+      logger.debug(s"partition $partitionId re-prime pump event")
       outstandingAcks += 1
       connector ! event
     })
