@@ -39,7 +39,7 @@ libraryDependencies ++=
     "com.microsoft.azure" % "azure-eventhubs" % "3.0.1",
 
     "ch.qos.logback" % "logback-classic" % "1.2.3",
-    "com.typesafe" % "config" % "1.3.4",
+    "com.typesafe" % "config" % "1.4.0",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
 
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
