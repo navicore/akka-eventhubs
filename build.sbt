@@ -35,9 +35,7 @@ inThisBuild(List(
 
 libraryDependencies ++=
   Seq(
-
     "com.microsoft.azure" % "azure-eventhubs" % "3.1.1",
-
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe" % "config" % "1.4.0",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
