@@ -13,7 +13,7 @@ javaOptions in test ++= Seq(
 
 parallelExecution in test := false
 
-val akkaVersion = "2.5.29"
+val akkaVersion = "2.5.31"
 val scala212 = "2.12.8"
 val scala213 = "2.13.0"
 val scala211 = "2.11.12"
@@ -35,9 +35,7 @@ inThisBuild(List(
 
 libraryDependencies ++=
   Seq(
-
-    "com.microsoft.azure" % "azure-eventhubs" % "3.1.0",
-
+    "com.microsoft.azure" % "azure-eventhubs" % "3.1.1",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
     "com.typesafe" % "config" % "1.4.0",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
