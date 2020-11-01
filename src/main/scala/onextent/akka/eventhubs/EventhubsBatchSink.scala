@@ -25,8 +25,7 @@ class EventhubsBatchSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
   val executorService: ScheduledExecutorService =
     Executors.newScheduledThreadPool(eventhubsConfig.threads)
 
-  var ehClient: EventHubClient =
-    EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
+  var ehClient: EventHubClient = eventhubsConfig.createClient
 
   val in: Inlet[Seq[EventhubsSinkData]] = Inlet.create("EventhubsSink.in")
 
@@ -97,8 +96,7 @@ class EventhubsBatchSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
       def reConnect(): Unit = {
         logger.warn("reconnecting sync")
         ehClient.closeSync()
-        ehClient =
-          EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
+        ehClient = eventhubsConfig.createClient
       }
 
       override def preStart(): Unit = {
