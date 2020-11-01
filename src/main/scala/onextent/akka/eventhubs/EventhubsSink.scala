@@ -27,8 +27,7 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
 
   val executorService: ScheduledExecutorService = Executors.newScheduledThreadPool(eventhubsConfig.threads)
 
-  var ehClient: EventHubClient =
-    EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
+  var ehClient: EventHubClient = eventhubsConfig.createClient
 
   val in: Inlet[EventhubsSinkData] = Inlet.create("EventhubsSink.in")
 
@@ -89,8 +88,13 @@ class EventhubsSink(eventhubsConfig: EventHubConf, partitionId: Int = 0)
       def reConnect(): Unit = {
         logger.warn("reconnecting sync")
         ehClient.closeSync()
-        ehClient =
-          EventHubClient.createFromConnectionStringSync(eventhubsConfig.connStr, executorService)
+        ehClient = eventhubsConfig.connStrOpt match {
+          case Some(connStr) =>
+            EventHubClient.createFromConnectionStringSync(connStr, executorService)
+          case _ => // spn todo:
+            throw new UnsupportedOperationException("please implement SPN")
+        }
+
       }
 
       override def preStart(): Unit = {

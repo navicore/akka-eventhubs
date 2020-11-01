@@ -16,7 +16,6 @@ abstract class AbstractPartitionReader(partitionId: Int,
                                        eventHubConf: EventHubConf)
     extends Actor
     with LazyLogging {
-
   import eventHubConf._
 
   var state: EventPosition =
@@ -26,11 +25,7 @@ abstract class AbstractPartitionReader(partitionId: Int,
       EventPosition.fromStartOfStream()
     }
 
-  import java.util.concurrent.Executors
-  val executorService: ScheduledExecutorService =
-    Executors.newScheduledThreadPool(eventHubConf.threads)
-  val ehClient: EventHubClient =
-    EventHubClient.createFromConnectionStringSync(connStr, executorService)
+  val ehClient: EventHubClient = createClient
 
   lazy val receiver: PartitionReceiver = ehClient.createEpochReceiverSync(
     ehConsumerGroup,
@@ -48,7 +43,7 @@ abstract class AbstractPartitionReader(partitionId: Int,
       import scala.compat.java8.FutureConverters._
       import scala.concurrent.duration._
       val cs: CompletableFuture[lang.Iterable[EventData]] =
-        receiver.receive(ehRecieverBatchSize)
+        receiver.receive(eventHubConf.ehReceiverBatchSize)
       val sf: Future[lang.Iterable[EventData]] = toScala(cs)
       implicit def ec: ExecutionContext = ExecutionContext.global
       val tryresult: Try[lang.Iterable[EventData]] =
@@ -61,7 +56,7 @@ abstract class AbstractPartitionReader(partitionId: Int,
               import scala.collection.JavaConverters._
               val r: List[EventData] = iter.asScala.toList
               logger.debug(
-                s"read ${r.length} java future messages with read batch size of $ehRecieverBatchSize")
+                s"read ${r.length} java future messages with read batch size of ${eventHubConf.ehReceiverBatchSize}")
               r
             case _ => List()
           }
