@@ -132,7 +132,7 @@ eventhubs-in {
 
 # SINK
 
-The sing requires a stream shape using a case class
+The sink requires a stream shape using a case class
 
 ```
 case class EventhubsSinkData(payload: Array[Byte],
