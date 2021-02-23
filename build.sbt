@@ -1,9 +1,9 @@
 name := "AkkaEventhubs"
 organization := "tech.navicore"
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8") 
-scalacOptions ++= Seq(
-  "-target:jvm-1.8"
-)
+//javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+//scalacOptions ++= Seq(
+//  "-target:jvm-1.8"
+//)
 fork := true
 javaOptions in test ++= Seq(
   "-Xms512M", "-Xmx2048M",
@@ -13,10 +13,12 @@ javaOptions in test ++= Seq(
 
 parallelExecution in test := false
 
-val akkaVersion = "2.6.12"
+val akkaVersion = "2.6.13"
+
 val scala212 = "2.12.13"
-val scala213 = "2.13.4"
+val scala213 = "2.13.5"
 crossScalaVersions := Seq(scala212, scala213)
+scalaVersion := scala212
 
 inThisBuild(List(
   organization := "tech.navicore",
