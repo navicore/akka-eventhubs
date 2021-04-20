@@ -45,7 +45,7 @@ libraryDependencies ++=
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
 
-    "org.scalatest" %% "scalatest" % "3.2.7" % "test"
+    "org.scalatest" %% "scalatest" % "3.2.8" % "test"
   )
 
 dependencyOverrides ++= Seq(
