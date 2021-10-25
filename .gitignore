@@ -1,3 +1,4 @@
+.scalafmt.conf
 metals/
 project/metals.sbt
 .bsp/
