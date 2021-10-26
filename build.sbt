@@ -1,9 +1,4 @@
 name := "AkkaEventhubs"
-organization := "tech.navicore"
-//javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
-//scalacOptions ++= Seq(
-//  "-target:jvm-1.8"
-//)
 fork := true
 javaOptions in test ++= Seq(
   "-Xms512M",
@@ -22,9 +17,7 @@ crossScalaVersions := Seq(scala212, scala213)
 scalaVersion := scala212
 
 enablePlugins(GitVersioning)
-ThisBuild / publishTo := Some(
-  "releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-)
+ThisBuild / publishTo := sonatypePublishToBundle.value
 inThisBuild(
   List(
     organization := "tech.navicore",
