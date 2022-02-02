@@ -43,7 +43,7 @@ libraryDependencies ++=
   Seq(
     "com.microsoft.azure" % "azure-eventhubs" % "3.3.0",
     "ch.qos.logback" % "logback-classic" % "1.2.10",
-    "com.typesafe" % "config" % "1.4.1",
+    "com.typesafe" % "config" % "1.4.2",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
