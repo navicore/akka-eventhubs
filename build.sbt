@@ -17,25 +17,26 @@ val scala213 = "2.13.8"
 crossScalaVersions := Seq(scala212, scala213)
 scalaVersion := scala212
 
-enablePlugins(GitVersioning)
 ThisBuild / publishTo := sonatypePublishToBundle.value
-inThisBuild(
-  List(
-    organization := "tech.navicore",
-    homepage := Some(url("https://github.com/navicore/akka-eventhubs")),
-    licenses := List(
-      "MIT" -> url(
-        "https://github.com/navicore/akka-eventhubs/blob/master/LICENSE"
-      )
-    ),
-    developers := List(
-      Developer(
-        "navicore",
-        "Ed Sweeney",
-        "ed@onextent.com",
-        url("https://navicore.tech")
-      )
-    )
+ThisBuild / organization := "tech.navicore"
+ThisBuild / homepage := Some(url("https://github.com/navicore/akka-eventhubs"))
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/navicore/akka-eventhubs"),
+    "scm:git@github.com:navicore/akka-eventhubs.git"
+  )
+)
+ThisBuild / licenses := List(
+  "MIT" -> url(
+    "https://github.com/navicore/akka-eventhubs/blob/master/LICENSE"
+  )
+)
+ThisBuild / developers := List(
+  Developer(
+    "navicore",
+    "Ed Sweeney",
+    "ed@onextent.com",
+    url("https://navicore.tech")
   )
 )
 
